@@ -1,5 +1,29 @@
 import Foundation
 
+/// Apports nutritionnels (totaux).
+struct Macros: Equatable {
+    var kcal: Double
+    var protein: Double
+    var carbs: Double
+    var fat: Double
+
+    static let zero = Macros(kcal: 0, protein: 0, carbs: 0, fat: 0)
+
+    static func + (lhs: Macros, rhs: Macros) -> Macros {
+        Macros(kcal: lhs.kcal + rhs.kcal,
+               protein: lhs.protein + rhs.protein,
+               carbs: lhs.carbs + rhs.carbs,
+               fat: lhs.fat + rhs.fat)
+    }
+
+    static func * (lhs: Macros, factor: Double) -> Macros {
+        Macros(kcal: lhs.kcal * factor,
+               protein: lhs.protein * factor,
+               carbs: lhs.carbs * factor,
+               fat: lhs.fat * factor)
+    }
+}
+
 /// Un aliment de référence. `base` = valeurs pour 100 g, ou pour 1 portion si `isPortion`.
 struct FoodItem: Identifiable, Hashable {
     let id: String

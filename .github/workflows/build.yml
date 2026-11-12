@@ -18,3 +18,7 @@ jobs:
             -sdk iphonesimulator -configuration Debug \
             CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log | grep -E "error:|warning:|BUILD" || true
           grep -q "BUILD SUCCEEDED" build.log
+      - name: Test API Open Food Facts
+        run: |
+          xcrun swiftc -o offcheck Sante/Models/FoodDatabase.swift Sante/Services/OpenFoodFacts.swift Tools/OFFCheck/main.swift
+          ./offcheck

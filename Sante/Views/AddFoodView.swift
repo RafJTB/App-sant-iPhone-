@@ -8,6 +8,12 @@ struct AddFoodView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Query(sort: \FoodEntry.date, order: .reverse) private var history: [FoodEntry]
+    @State private var showScanner = false
+    @State private var scannedItem: FoodItem?
+    @State private var offResults: [OFFProduct] = []
+    @State private var offQuery = ""
+    @State private var offLoading = false
+    @State private var offError: String?
 
     init(day: Date, meal: Meal) {
         self.day = day
@@ -36,11 +42,20 @@ struct AddFoodView: View {
                     Picker("Repas", selection: $meal) {
                         ForEach(Meal.allCases) { Text($0.label).tag($0) }
                     }
+                    Button {
+                        showScanner = true
+                    } label: {
+                        Label("Scanner un code-barres", systemImage: "barcode.viewfinder")
+                    }
                     NavigationLink {
                         ManualEntryView(onSave: save)
                     } label: {
                         Label("Saisie manuelle (étiquette, plat…)", systemImage: "square.and.pencil")
                     }
+                }
+
+                if !search.trimmingCharacters(in: .whitespaces).isEmpty || !offResults.isEmpty || offLoading {
+                    openFoodFactsSection
                 }
 
                 let filteredRecents = recents.filter(matches)
@@ -70,7 +85,14 @@ struct AddFoodView: View {
                     Text("Valeurs moyennes approximatives. Pour un produit précis, utilise la saisie manuelle avec l'étiquette.")
                 }
             }
-            .searchable(text: $search, prompt: "Rechercher un aliment")
+            .searchable(text: $search, prompt: "Rechercher un aliment ou une marque")
+            .onSubmit(of: .search) { searchOpenFoodFacts() }
+            .sheet(isPresented: $showScanner) {
+                ScanBarcodeView { item in scannedItem = item }
+            }
+            .navigationDestination(item: $scannedItem) { item in
+                PortionView(item: item, onSave: save)
+            }
             .navigationTitle(meal.label)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -78,6 +100,54 @@ struct AddFoodView: View {
                     Button("Annuler") { dismiss() }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var openFoodFactsSection: some View {
+        Section {
+            if offLoading {
+                HStack { ProgressView(); Text("Recherche sur Open Food Facts…").foregroundStyle(.secondary) }
+            } else if offQuery != search.trimmingCharacters(in: .whitespaces) || (offResults.isEmpty && offError == nil) {
+                Button {
+                    searchOpenFoodFacts()
+                } label: {
+                    Label("Chercher « \(search) » dans les produits du commerce", systemImage: "magnifyingglass")
+                }
+            }
+            if let offError {
+                Text(offError).font(.footnote).foregroundStyle(.orange)
+            }
+            ForEach(offResults) { product in
+                NavigationLink {
+                    PortionView(item: product.asFoodItem, onSave: save)
+                } label: {
+                    FoodItemRow(item: product.asFoodItem)
+                }
+            }
+        } header: {
+            Text("Produits du commerce")
+        } footer: {
+            Text("Source : Open Food Facts (base collaborative). Vérifie les valeurs avec l'étiquette en cas de doute.")
+        }
+    }
+
+    private func searchOpenFoodFacts() {
+        let query = search.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty, !offLoading else { return }
+        offLoading = true
+        offError = nil
+        offQuery = query
+        Task {
+            do {
+                let results = try await OpenFoodFactsClient.shared.search(query)
+                offResults = results
+                if results.isEmpty { offError = "Aucun produit trouvé pour « \(query) »." }
+            } catch {
+                offResults = []
+                offError = error.localizedDescription
+            }
+            offLoading = false
         }
     }
 
