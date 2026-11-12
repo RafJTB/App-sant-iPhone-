@@ -61,9 +61,12 @@ struct EnergyAnalysis {
         let cal = Calendar.current
         let today = cal.startOfDay(for: now)
 
-        weightKg = profile.effectiveWeight(healthWeight: health.latestWeightKg)
-        bmr = profile.bmr(weightKg: weightKg)
-        proteinTarget = weightKg * profile.proteinPerKg
+        let weight = profile.effectiveWeight(healthWeight: health.latestWeightKg)
+        let bmr = profile.bmr(weightKg: weight)
+        let activityFactor = profile.activityFactor
+        weightKg = weight
+        self.bmr = bmr
+        proteinTarget = weight * profile.proteinPerKg
         targetSurplus = profile.targetSurplus
 
         // Apports par jour
@@ -80,7 +83,7 @@ struct EnergyAnalysis {
             guard let d = cal.date(byAdding: .day, value: -offset, to: today),
                   let intake = intakeByDay[d], intake.kcal > 0 else { continue }
             let (exp, src) = Self.expenditure(day: health.day(d), bmr: bmr,
-                                              activityFactor: profile.activityFactor, intake: intake.kcal)
+                                              activityFactor: activityFactor, intake: intake.kcal)
             history.append(DayBalance(date: d, intake: intake.kcal, expenditure: exp, source: src))
         }
         self.history = history
