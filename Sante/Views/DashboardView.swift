@@ -1,0 +1,189 @@
+import SwiftUI
+import SwiftData
+import Charts
+
+struct DashboardView: View {
+    @EnvironmentObject private var health: HealthDataStore
+    @EnvironmentObject private var profile: ProfileStore
+    @Query(sort: \FoodEntry.date) private var entries: [FoodEntry]
+
+    var body: some View {
+        let analysis = EnergyAnalysis(entries: entries, health: health, profile: profile)
+
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 16) {
+                    if let message = health.errorMessage {
+                        Card(title: "Santé", symbol: "exclamationmark.triangle.fill", tint: .orange) {
+                            Text(message).font(.subheadline)
+                        }
+                    }
+                    TodayCaloriesCard(analysis: analysis)
+                    VerdictCard(analysis: analysis)
+                    HStack(alignment: .top, spacing: 16) {
+                        SleepMiniCard(night: health.lastNight)
+                        ActivityMiniCard(day: health.today)
+                    }
+                }
+                .padding()
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Aujourd'hui")
+            .refreshable { await health.reload() }
+        }
+    }
+}
+
+// MARK: - Calories du jour
+
+private struct TodayCaloriesCard: View {
+    let analysis: EnergyAnalysis
+
+    var body: some View {
+        Card(title: "Calories du jour", symbol: "flame.fill", tint: .orange) {
+            let intake = analysis.todayIntake
+            HStack(alignment: .firstTextBaseline) {
+                Text(Fmt.kcal(intake.kcal))
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                Text("/ \(Fmt.kcal(analysis.todayTarget)) kcal")
+                    .foregroundStyle(.secondary)
+            }
+            ProgressView(value: min(intake.kcal, analysis.todayTarget), total: max(analysis.todayTarget, 1))
+                .tint(.orange)
+
+            if analysis.remainingToday > 0 {
+                Text("Encore **\(Fmt.kcal(analysis.remainingToday)) kcal** pour atteindre ton objectif de prise de poids (+\(Fmt.kcal(analysis.targetSurplus)) kcal/jour).")
+                    .font(.subheadline)
+            } else {
+                Text("Objectif atteint ✅ (\(Fmt.kcal(-analysis.remainingToday)) kcal au-dessus).")
+                    .font(.subheadline)
+            }
+
+            VStack(spacing: 10) {
+                MacroBar(label: "Protéines", value: intake.protein, target: analysis.proteinTarget, color: .red)
+                MacroBar(label: "Glucides", value: intake.carbs, target: nil, color: .blue)
+                MacroBar(label: "Lipides", value: intake.fat, target: nil, color: .yellow)
+            }
+            .padding(.top, 4)
+
+            Text("Dépense \(analysis.todayTargetSource == .measured ? "moyenne mesurée sur 7 jours" : "estimée depuis ton profil").")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+// MARK: - Verdict
+
+private struct VerdictCard: View {
+    let analysis: EnergyAnalysis
+
+    var body: some View {
+        Card(title: "Vais-je prendre du poids ?", symbol: "scalemass.fill", tint: .green) {
+            verdictText
+
+            if !analysis.history.isEmpty {
+                Chart(analysis.history) { day in
+                    BarMark(x: .value("Jour", day.date, unit: .day),
+                            y: .value("Balance", day.balance))
+                        .foregroundStyle(day.balance >= 0 ? Color.green : Color.red)
+                    RuleMark(y: .value("Objectif", analysis.targetSurplus))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                        .foregroundStyle(.secondary)
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 2)) { _ in
+                        AxisValueLabel(format: .dateTime.day())
+                    }
+                }
+                .frame(height: 150)
+                Text("Balance quotidienne (apports − dépense) des jours saisis. Pointillés : ton objectif.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
+            Divider()
+
+            if let trend = analysis.weightTrendKgPerWeek {
+                HStack {
+                    Image(systemName: "chart.xyaxis.line")
+                    Text("Balance réelle (Santé) : **\(Fmt.signed(trend, digits: 2)) kg/semaine** sur 4 semaines.")
+                }
+                .font(.subheadline)
+                if let predicted = analysis.projectedKgPerWeek, predicted - trend > 0.3 {
+                    Text("Ta balance monte moins vite que prévu : il est probable que certains repas ne soient pas saisis, ou que les portions soient sous-estimées.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            } else {
+                Text("Pèse-toi 2 à 3 fois par semaine (balance connectée ou saisie dans Santé) pour comparer la prévision à la réalité.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var verdictText: some View {
+        switch analysis.verdict {
+        case .notEnoughData(let n):
+            Text("Saisis tes repas au moins \(EnergyAnalysis.minDaysForVerdict) journées complètes pour obtenir un verdict (\(n)/\(EnergyAnalysis.minDaysForVerdict) sur les 7 derniers jours).")
+                .font(.subheadline)
+        case .gaining(let kg):
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Oui 📈").font(.title2.bold()).foregroundStyle(.green)
+                Text("Surplus moyen de **\(Fmt.signed(analysis.averageBalance ?? 0, digits: 0)) kcal/jour** → environ **\(Fmt.signed(kg, digits: 2)) kg/semaine** (\(Fmt.signed(kg * 4.3, digits: 1)) kg/mois).")
+                    .font(.subheadline)
+                if kg > 0.5 {
+                    Text("Rythme rapide : une bonne partie risque d'être du gras. Pour une prise de masse propre, vise +0,25 à +0,5 kg/semaine.")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+            }
+        case .maintaining:
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Plutôt non ➖").font(.title2.bold()).foregroundStyle(.blue)
+                Text("Tu es proche de l'équilibre (\(Fmt.signed(analysis.averageBalance ?? 0, digits: 0)) kcal/jour) : ton poids devrait rester stable. Ajoute environ \(Fmt.kcal(analysis.targetSurplus)) kcal/jour pour prendre du poids.")
+                    .font(.subheadline)
+            }
+        case .losing(let kg):
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Non 📉").font(.title2.bold()).foregroundStyle(.red)
+                Text("Déficit moyen de **\(Fmt.kcal(-(analysis.averageBalance ?? 0))) kcal/jour** → environ **\(Fmt.signed(kg, digits: 2)) kg/semaine**. Il te manque ~\(Fmt.kcal(analysis.targetSurplus - (analysis.averageBalance ?? 0))) kcal/jour pour atteindre ton objectif.")
+                    .font(.subheadline)
+            }
+        }
+    }
+}
+
+// MARK: - Mini cartes
+
+private struct SleepMiniCard: View {
+    let night: SleepNight?
+
+    var body: some View {
+        Card(title: "Sommeil", symbol: "bed.double.fill", tint: .indigo) {
+            if let night {
+                StatTile(value: Fmt.duration(night.asleep), unit: "",
+                         caption: "\(Fmt.time(night.bedtime)) → \(Fmt.time(night.wakeTime))")
+                if night.hours < 7 {
+                    Text("Moins de 7 h : la récupération et la prise de muscle en pâtissent.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            } else {
+                EmptyHealthHint(text: "Aucune nuit enregistrée.")
+            }
+        }
+    }
+}
+
+private struct ActivityMiniCard: View {
+    let day: DayHealth?
+
+    var body: some View {
+        Card(title: "Activité", symbol: "flame", tint: .pink) {
+            if let day, day.activeKcal > 0 || day.steps > 0 {
+                StatTile(value: Fmt.kcal(day.activeKcal), unit: "kcal", caption: "énergie active")
+                StatTile(value: Int(day.steps).formatted(), unit: "pas", caption: "aujourd'hui")
+            } else {
+                EmptyHealthHint(text: "Pas encore d'activité aujourd'hui.")
+            }
+        }
+    }
+}
