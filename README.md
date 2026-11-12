@@ -7,7 +7,7 @@ App iOS native (SwiftUI) qui lit tes données de l'app **Santé** et te permet d
 | Onglet | Contenu | Source |
 |---|---|---|
 | **Aujourd'hui** | Calories mangées vs objectif, protéines, verdict « Vais-je prendre du poids ? », graphique de balance, sommeil et activité du jour | Repas + Santé |
-| **Repas** | Journal par repas (petit-déj, déjeuner, collation, dîner), navigation par jour, ~55 aliments courants, récents, saisie manuelle | Local (iPhone) |
+| **Repas** | Journal par repas, navigation par jour, **scan de code-barres**, **recherche dans les produits du commerce (Open Food Facts)**, ~55 aliments courants, récents, saisie manuelle | Local (iPhone) + Open Food Facts |
 | **Sommeil** | Dernière nuit (coucher/réveil, phases profond/léger/paradoxal), 14 nuits, moyenne, régularité | Santé |
 | **Sport** | Énergie active, pas, minutes d'exercice, séances des 30 derniers jours (type, durée, kcal, distance) | Santé |
 | **Profil** | Poids/taille/âge/sexe (importés de Santé), surplus visé, protéines g/kg, niveau d'activité | Santé + toi |
@@ -52,15 +52,20 @@ Sante/
 │   ├── HealthDataStore.swift   Lecture HealthKit (activité, sommeil, séances, poids)
 │   ├── SleepBuilder.swift      Regroupement des nuits, dédoublonnage iPhone/Watch
 │   ├── WorkoutSummary.swift    Séances + noms/icônes en français
+│   ├── OpenFoodFacts.swift     Client API Open Food Facts (code-barres + recherche)
 │   └── EnergyAnalysis.swift    Balance énergétique, verdict, tendance de poids
 └── Views/                      Les 5 onglets + composants
 ```
 
-Un workflow GitHub Actions (`.github/workflows/build.yml`) compile l'app sur macOS à chaque push.
+Un workflow GitHub Actions (`.github/workflows/build.yml`) compile l'app sur macOS à chaque push et teste le client Open Food Facts contre l'API réelle (`Tools/OFFCheck`).
+
+### Scan de code-barres
+- Utilise le scanner natif d'Apple (VisionKit) : **iPhone XS/XR ou plus récent**, ne fonctionne pas dans le simulateur (saisie du code possible en secours).
+- Les données viennent d'**Open Food Facts**, une base collaborative : la plupart des produits français y sont, mais vérifie les valeurs avec l'étiquette en cas de doute.
+- Un produit ajouté apparaît ensuite dans « Récents » : pas besoin de le rescanner.
 
 ## Pistes d'évolution
 
-- Scan de code-barres + recherche **Open Food Facts** (base française gratuite) pour éviter la saisie manuelle.
 - Écrire les calories/macros dans Santé (`dietaryEnergyConsumed`) pour les partager avec d'autres apps.
 - Objectif calorique ajusté automatiquement selon la tendance réelle de la balance.
 - Widget écran d'accueil « calories restantes ».
