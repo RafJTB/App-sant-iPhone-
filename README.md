@@ -26,7 +26,9 @@ App iOS native (SwiftUI) qui lit tes données de l'app **Santé** et te permet d
 
 ## Installer l'app sur ton iPhone
 
-Il faut un **Mac avec Xcode 16 ou plus récent** (gratuit sur le Mac App Store). L'iPhone doit être sous **iOS 17+**.
+**Sans Mac** : suis [INSTALLATION.md](INSTALLATION.md) (TestFlight via GitHub, ou Sideloadly sur PC).
+
+**Avec un Mac** : il faut **Xcode 16 ou plus récent** (gratuit sur le Mac App Store). L'iPhone doit être sous **iOS 17+**.
 
 1. Clone le dépôt et ouvre `Sante.xcodeproj` dans Xcode.
 2. Sélectionne la cible **Sante** › onglet **Signing & Capabilities** :
