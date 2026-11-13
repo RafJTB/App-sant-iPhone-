@@ -14,6 +14,8 @@ struct AddFoodView: View {
     @State private var offQuery = ""
     @State private var offLoading = false
     @State private var offError: String?
+    @Query(sort: \MealTemplate.createdAt, order: .reverse) private var templates: [MealTemplate]
+    @Query(sort: \Recipe.name) private var recipes: [Recipe]
 
     init(day: Date, meal: Meal) {
         self.day = day
@@ -52,6 +54,51 @@ struct AddFoodView: View {
                             ManualEntryView(onSave: save)
                         } label: {
                             Label("Saisie manuelle (étiquette, plat…)", systemImage: "square.and.pencil")
+                        }
+                        NavigationLink {
+                            RecipeEditorView()
+                        } label: {
+                            Label("Nouvelle recette maison", systemImage: "frying.pan")
+                        }
+                    }
+
+                    let filteredTemplates = templates.filter { search.isEmpty || $0.name.localizedStandardContains(search) }
+                    if !filteredTemplates.isEmpty {
+                        Section {
+                            ForEach(filteredTemplates) { template in
+                                Button {
+                                    addTemplate(template)
+                                } label: {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(template.name).foregroundStyle(.primary)
+                                            Text(template.items.map(\.name).joined(separator: ", "))
+                                                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                        }
+                                        Spacer()
+                                        Text("\(Fmt.kcal(template.total.kcal)) kcal")
+                                            .monospacedDigit().foregroundStyle(.secondary)
+                                        Image(systemName: "plus.circle.fill").foregroundStyle(Color.accentColor)
+                                    }
+                                }
+                            }
+                        } header: {
+                            Text("Mes repas habituels")
+                        } footer: {
+                            Text("Un tap ajoute tous les aliments du repas.")
+                        }
+                    }
+
+                    let filteredRecipes = recipes.filter { search.isEmpty || $0.name.localizedStandardContains(search) }
+                    if !filteredRecipes.isEmpty {
+                        Section("Mes recettes") {
+                            ForEach(filteredRecipes) { recipe in
+                                NavigationLink {
+                                    PortionView(item: recipe.asFoodItem, onSave: save)
+                                } label: {
+                                    FoodItemRow(item: recipe.asFoodItem)
+                                }
+                            }
                         }
                     }
     
@@ -162,6 +209,15 @@ struct AddFoodView: View {
         return cal.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
     }
 
+    /// Ajoute tous les aliments d'un repas habituel.
+    private func addTemplate(_ template: MealTemplate) {
+        for item in template.items {
+            context.insert(FoodEntry(date: entryDate, name: item.name, meal: meal,
+                                     quantity: item.quantity, isGrams: item.isGrams, macros: item.macros))
+        }
+        dismiss()
+    }
+
     private func save(name: String, amount: Double, isGrams: Bool, macros: Macros) {
         let entry = FoodEntry(date: entryDate, name: name, meal: meal,
                               quantity: amount, isGrams: isGrams, macros: macros)
@@ -170,7 +226,7 @@ struct AddFoodView: View {
     }
 }
 
-private struct FoodItemRow: View {
+struct FoodItemRow: View {
     let item: FoodItem
 
     var body: some View {
@@ -184,13 +240,15 @@ private struct FoodItemRow: View {
     }
 }
 
-private struct PortionView: View {
+struct PortionView: View {
     let item: FoodItem
+    var buttonTitle = "Ajouter"
     let onSave: (String, Double, Bool, Macros) -> Void
     @State private var amount: Double
 
-    init(item: FoodItem, onSave: @escaping (String, Double, Bool, Macros) -> Void) {
+    init(item: FoodItem, buttonTitle: String = "Ajouter", onSave: @escaping (String, Double, Bool, Macros) -> Void) {
         self.item = item
+        self.buttonTitle = buttonTitle
         self.onSave = onSave
         _amount = State(initialValue: item.defaultAmount)
     }
@@ -218,7 +276,7 @@ private struct PortionView: View {
                     Button {
                         onSave(item.name, amount, !item.isPortion, macros)
                     } label: {
-                        Text("Ajouter").frame(maxWidth: .infinity).bold()
+                        Text(buttonTitle).frame(maxWidth: .infinity).bold()
                     }
                     .disabled(amount <= 0)
                 }

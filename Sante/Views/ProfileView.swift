@@ -65,6 +65,14 @@ struct ProfileView: View {
                     }
     
                     Section {
+                        NavigationLink {
+                            LibraryView()
+                        } label: {
+                            Label("Repas habituels et recettes", systemImage: "book.closed")
+                        }
+                    }
+
+                    Section {
                         Toggle("Rappel du soir", isOn: $profile.reminderEnabled)
                         if profile.reminderEnabled {
                             DatePicker("Heure", selection: $profile.reminderTime, displayedComponents: .hourAndMinute)

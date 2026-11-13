@@ -8,6 +8,8 @@ struct FoodLogView: View {
     @EnvironmentObject private var profile: ProfileStore
     @State private var day = Calendar.current.startOfDay(for: Date())
     @State private var addingMeal: Meal?
+    @State private var templateMeal: Meal?
+    @State private var templateName = ""
 
     private var dayEntries: [FoodEntry] {
         entries.filter { Calendar.current.isDate($0.date, inSameDayAs: day) }
@@ -38,6 +40,34 @@ struct FoodLogView: View {
     private var looksIncomplete: Bool {
         guard let typical = typicalIntake else { return false }
         return totals.kcal < typical * EnergyAnalysis.lowDayRatio
+    }
+
+    /// Aliments du même repas la veille du jour affiché.
+    private func previousDayItems(_ meal: Meal) -> [FoodEntry] {
+        guard let previous = Calendar.current.date(byAdding: .day, value: -1, to: day) else { return [] }
+        return entries.filter { Calendar.current.isDate($0.date, inSameDayAs: previous) && $0.meal == meal }
+    }
+
+    private var entryDate: Date {
+        let cal = Calendar.current
+        if cal.isDateInToday(day) { return Date() }
+        return cal.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
+    }
+
+    private func copy(_ items: [FoodEntry], to meal: Meal) {
+        for e in items {
+            context.insert(FoodEntry(date: entryDate, name: e.name, meal: meal,
+                                     quantity: e.quantity, isGrams: e.isGrams, macros: e.macros))
+        }
+    }
+
+    private func saveTemplate() {
+        guard let meal = templateMeal else { return }
+        let items = dayEntries.filter { $0.meal == meal }.map(TemplateItem.init(entry:))
+        let name = templateName.trimmingCharacters(in: .whitespaces)
+        guard !items.isEmpty, !name.isEmpty else { return }
+        context.insert(MealTemplate(name: name, meal: meal, items: items))
+        templateMeal = nil
     }
 
     private func setComplete(_ complete: Bool) {
@@ -72,6 +102,25 @@ struct FoodLogView: View {
                                 addingMeal = meal
                             } label: {
                                 Label("Ajouter un aliment", systemImage: "plus.circle.fill")
+                            }
+                            if items.isEmpty {
+                                let previous = previousDayItems(meal)
+                                if !previous.isEmpty {
+                                    Button {
+                                        copy(previous, to: meal)
+                                    } label: {
+                                        Label("Comme hier · \(Fmt.kcal(previous.reduce(0) { $0 + $1.kcal })) kcal",
+                                              systemImage: "arrow.counterclockwise")
+                                    }
+                                }
+                            } else {
+                                Button {
+                                    templateName = meal.label
+                                    templateMeal = meal
+                                } label: {
+                                    Label("Enregistrer comme repas habituel", systemImage: "star")
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         } header: {
                             HStack {
@@ -120,6 +169,16 @@ struct FoodLogView: View {
             .navigationTitle("Repas")
             .sheet(item: $addingMeal) { meal in
                 AddFoodView(day: day, meal: meal)
+            }
+            .alert("Repas habituel", isPresented: Binding(
+                get: { templateMeal != nil },
+                set: { if !$0 { templateMeal = nil } }
+            )) {
+                TextField("Nom (ex. : Mon petit-déj)", text: $templateName)
+                Button("Enregistrer") { saveTemplate() }
+                Button("Annuler", role: .cancel) { templateMeal = nil }
+            } message: {
+                Text("Tu pourras ajouter tout ce repas en un tap depuis « Ajouter un aliment ».")
             }
         }
     }
