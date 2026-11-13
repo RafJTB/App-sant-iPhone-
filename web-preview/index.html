@@ -30,7 +30,7 @@ body { color: var(--fg); font-family: var(--font); font-size: 15px; line-height:
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
 
-.app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+.app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
 .wrap { padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
 .preview-note { display: flex; gap: 8px; align-items: center; justify-content: center; font-size: 11.5px; color: var(--muted); padding-block: 10px 2px; }
 .preview-note b { color: var(--fg); font-weight: 600; }
@@ -105,13 +105,25 @@ h1.large { font-size: 34px; font-weight: 800; letter-spacing: -.035em; margin: 2
 .daysel button { color: var(--accent); width: 36px; height: 36px; border-radius: 10px; font-size: 20px; background: var(--bg); }
 .daysel button:disabled { opacity: .35; cursor: default; }
 
-/* barre d'onglets */
-.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--bar); -webkit-backdrop-filter: saturate(1.6) blur(20px); backdrop-filter: saturate(1.6) blur(20px); border-top: 1px solid var(--sep);
-  padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); }
-.tabbar-inner { max-width: 430px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
-.tab { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 7px; font-size: 10.5px; font-weight: 500; color: #9AA29E; }
-.tab svg { width: 23px; height: 23px; }
-.tab[aria-selected="true"] { color: var(--accent); }
+/* barre d'onglets Liquid Glass : capsule flottante translucide, reflet en haut, pastille sur l'onglet actif */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; pointer-events: none;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px)); }
+.tabbar-inner { pointer-events: auto; position: relative; max-width: 400px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; padding: 5px;
+  border-radius: 999px; background: rgba(255, 255, 255, .58);
+  -webkit-backdrop-filter: blur(22px) saturate(1.9) brightness(1.04); backdrop-filter: blur(22px) saturate(1.9) brightness(1.04);
+  border: 1px solid rgba(255, 255, 255, .75);
+  box-shadow: 0 10px 34px rgba(14, 19, 17, .14), 0 2px 6px rgba(14, 19, 17, .06), inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(14, 19, 17, .05);
+  transition: max-width .35s cubic-bezier(.2, .8, .2, 1), padding .35s; }
+.tabbar-inner::before { content: ""; position: absolute; inset: 1px 18px auto; height: 45%; border-radius: 999px; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, .65), rgba(255, 255, 255, 0)); }
+.tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 6px; border-radius: 999px; font-size: 10.5px; font-weight: 600; color: #4E5753; transition: background .25s, color .25s; }
+.tab svg { width: 22px; height: 22px; }
+.tab[aria-selected="true"] { color: var(--accent); background: rgba(14, 19, 17, .065); }
+.tab:active { transform: scale(.94); }
+.tabbar.mini .tabbar-inner { max-width: 290px; padding: 4px; }
+.tabbar.mini .tab span { display: none; }
+.tabbar.mini .tab { padding: 9px 0; }
+@media (prefers-reduced-motion: reduce) { .tabbar-inner { transition: none; } }
 
 /* feuille d'ajout */
 .sheet-backdrop { position: fixed; inset: 0; background: rgba(14,19,17,.28); z-index: 30; }
@@ -135,7 +147,7 @@ h1.large { font-size: 34px; font-weight: 800; letter-spacing: -.035em; margin: 2
 .primary { background: var(--fg); color: var(--bg); font-weight: 600; border-radius: 14px; padding: 15px; width: 100%; }
 .primary:disabled { opacity: .45; }
 .note { font-size: 12px; color: var(--muted); padding: 0 4px; }
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(100px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; z-index: 40; white-space: nowrap; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; z-index: 40; white-space: nowrap; }
 .scanbox { aspect-ratio: 4 / 3; max-width: 100%; border-radius: 18px; background: #0d1210; display: grid; place-items: center; position: relative; overflow: hidden; }
 .scanbox .frame { width: 70%; height: 38%; border: 3px solid #fff; border-radius: 12px; opacity: .9; }
 .scanbox .laser { position: absolute; left: 15%; right: 15%; height: 2px; background: #3ee08f; top: 50%; box-shadow: 0 0 10px #3ee08f; animation: scan 1.6s ease-in-out infinite alternate; }
@@ -617,6 +629,15 @@ document.addEventListener("input", e => {
   }
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && sheet.open) closeSheet(); });
+
+// iOS 26 : la barre se réduit en faisant défiler vers le bas et revient en remontant
+let lastY = 0;
+addEventListener("scroll", () => {
+  const y = scrollY, bar = document.querySelector(".tabbar");
+  if (y > lastY + 6 && y > 80) bar.classList.add("mini");
+  else if (y < lastY - 6 || y < 40) bar.classList.remove("mini");
+  lastY = y;
+}, { passive: true });
 
 render();
 </script>
