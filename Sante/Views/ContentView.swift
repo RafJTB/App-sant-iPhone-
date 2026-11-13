@@ -18,6 +18,7 @@ struct ContentView: View {
             ProfileView()
                 .tabItem { Label("Profil", systemImage: "person.crop.circle") }
         }
+        .liquidGlassTabBar()
         .task {
             await health.requestAuthorizationAndLoad()
             if !profile.didImportFromHealth {
@@ -29,5 +30,22 @@ struct ContentView: View {
                 Task { await health.reload() }
             }
         }
+    }
+}
+
+extension View {
+    /// iOS 26+ : la barre d'onglets (Liquid Glass, automatique avec Xcode 26) se réduit
+    /// quand on fait défiler vers le bas, comme dans les apps Apple.
+    @ViewBuilder
+    func liquidGlassTabBar() -> some View {
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            self.tabBarMinimizeBehavior(.onScrollDown)
+        } else {
+            self
+        }
+        #else
+        self
+        #endif
     }
 }

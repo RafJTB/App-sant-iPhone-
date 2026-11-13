@@ -6,11 +6,15 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
-      - name: Xcode version
-        run: xcodebuild -version
+      - name: Sélection de Xcode 26 ou plus récent (Liquid Glass)
+        run: |
+          XC=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)
+          if [ -z "$XC" ]; then echo "::error::Aucun Xcode 26+ sur ce runner"; ls /Applications | grep Xcode; exit 1; fi
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
       - name: Build (simulateur, sans signature)
         run: |
           set -o pipefail
