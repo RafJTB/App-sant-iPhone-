@@ -1,0 +1,594 @@
+<title>Suivi Santé – aperçu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout : une colonne façon iPhone (max 430 px), grand titre iOS, cartes groupées, barre d'onglets fixe en bas. */
+:root {
+  --bg: #F1F4F2;
+  --card: #FFFFFF;
+  --fill: #E9EEEB;
+  --fg: #111614;
+  --muted: #69736E;
+  --sep: rgba(40, 60, 50, .13);
+  --accent: #1E9E64;
+  --orange: #EE8320;
+  --red: #E0474C;
+  --blue: #2E7CDB;
+  --yellow: #D9A311;
+  --indigo: #5856D6;
+  --cyan: #2BA5DB;
+  --purple: #9452C9;
+  --pink: #E0396F;
+  --bar: rgba(248, 250, 249, .86);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --round: ui-rounded, "SF Pro Rounded", -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --card: #1B1F1D; --fill: #2A2F2C; --fg: #F1F5F3; --muted: #97A19C;
+    --sep: rgba(255,255,255,.12); --accent: #33C27E; --orange: #FF9F3A; --red: #FF5D61;
+    --blue: #4A95F0; --yellow: #F2C230; --indigo: #7C7AF0; --cyan: #5AC8FA; --purple: #B57BE6; --pink: #FF5C8D;
+    --bar: rgba(22, 25, 24, .86);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --card: #1B1F1D; --fill: #2A2F2C; --fg: #F1F5F3; --muted: #97A19C;
+  --sep: rgba(255,255,255,.12); --accent: #33C27E; --orange: #FF9F3A; --red: #FF5D61;
+  --blue: #4A95F0; --yellow: #F2C230; --indigo: #7C7AF0; --cyan: #5AC8FA; --purple: #B57BE6; --pink: #FF5C8D;
+  --bar: rgba(22, 25, 24, .86);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); }
+body { color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+
+.app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.preview-note { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); padding-block: 10px 0; }
+.preview-note b { color: var(--accent); font-weight: 600; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+
+h1.large { font-size: 32px; font-weight: 700; letter-spacing: -.02em; margin: 6px 0 14px; text-wrap: balance; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--card); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card-title { display: flex; align-items: center; gap: 7px; font-size: 16px; font-weight: 600; }
+.card-title svg { width: 18px; height: 18px; flex: none; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.big { font-family: var(--round); font-size: 40px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.sub { color: var(--muted); }
+.small { font-size: 13px; }
+.caption { font-size: 12px; color: var(--muted); }
+.tabular { font-variant-numeric: tabular-nums; }
+.progress { height: 8px; border-radius: 4px; background: var(--fill); overflow: hidden; }
+.progress > i { display: block; height: 100%; border-radius: 4px; }
+.macro { display: flex; flex-direction: column; gap: 5px; }
+.macro-head { display: flex; justify-content: space-between; font-size: 14px; gap: 8px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 8px; }
+.tile .v { font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile .v span { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+.tile .c { font-size: 12px; color: var(--muted); }
+.verdict { font-size: 26px; font-weight: 700; }
+.divider { height: 1px; background: var(--sep); }
+.chart { width: 100%; height: auto; display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+/* listes groupées iOS */
+.group-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 0 4px; margin-bottom: -6px; display: flex; justify-content: space-between; gap: 8px; }
+.group-label .meal { display: inline-flex; align-items: center; gap: 6px; }
+.group-label svg { width: 15px; height: 15px; }
+.list { background: var(--card); border-radius: 14px; overflow: hidden; }
+.item { display: flex; align-items: center; gap: 12px; padding: 11px 16px; min-height: 48px; position: relative; width: 100%; text-align: left; }
+.item + .item::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: var(--sep); }
+.item .grow { flex: 1; min-width: 0; }
+.item .name { overflow-wrap: anywhere; }
+.item .meta { font-size: 12px; color: var(--muted); }
+.item .end { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.item.action { color: var(--accent); font-weight: 500; }
+.item .chev { color: var(--muted); opacity: .6; }
+.icon-circle { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: none; }
+.icon-circle svg { width: 20px; height: 20px; }
+.del { color: var(--red); font-size: 13px; padding: 4px 6px; }
+.daysel { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; }
+.daysel button { color: var(--accent); padding: 6px 10px; font-size: 18px; }
+.daysel button:disabled { opacity: .3; cursor: default; }
+
+/* barre d'onglets */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--bar); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-top: 1px solid var(--sep);
+  padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); }
+.tabbar-inner { max-width: 430px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
+.tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 6px; font-size: 10px; color: var(--muted); }
+.tab svg { width: 24px; height: 24px; }
+.tab[aria-selected="true"] { color: var(--accent); }
+
+/* feuille d'ajout */
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 30; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; top: calc(env(safe-area-inset-top, 0px) + 28px); z-index: 31; max-width: 430px; margin: 0 auto; background: var(--bg); border-radius: 14px 14px 0 0; display: flex; flex-direction: column; overflow: hidden; animation: up .28s ease-out; }
+@keyframes up { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
+.sheet-nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 12px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); }
+.sheet-nav .t { font-weight: 600; text-align: center; }
+.sheet-nav .l { color: var(--accent); justify-self: start; }
+.sheet-body { overflow-y: auto; flex: 1; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+.search { display: flex; align-items: center; gap: 8px; background: var(--fill); border-radius: 10px; padding: 8px 10px; }
+.search input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; color: var(--fg); outline: none; }
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--fill); border-radius: 9px; padding: 2px; gap: 2px; }
+.seg button { font-size: 12.5px; padding: 6px 2px; border-radius: 7px; }
+.seg button[aria-pressed="true"] { background: var(--card); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.field { display: flex; align-items: center; gap: 8px; }
+.field input { width: 96px; text-align: right; border: 0; background: var(--fill); border-radius: 8px; padding: 7px 9px; font: inherit; color: var(--fg); font-variant-numeric: tabular-nums; }
+.stepper { display: inline-flex; background: var(--fill); border-radius: 8px; overflow: hidden; }
+.stepper button { width: 44px; height: 32px; font-size: 20px; }
+.stepper button + button { border-left: 1px solid var(--sep); }
+.primary { background: var(--accent); color: #fff; font-weight: 600; border-radius: 12px; padding: 14px; width: 100%; }
+.primary:disabled { opacity: .45; }
+.note { font-size: 12px; color: var(--muted); padding: 0 4px; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 9px 16px; border-radius: 20px; font-size: 14px; z-index: 40; white-space: nowrap; }
+.scanbox { aspect-ratio: 4 / 3; max-width: 100%; border-radius: 14px; background: #0d1210; display: grid; place-items: center; position: relative; overflow: hidden; }
+.scanbox .frame { width: 70%; height: 38%; border: 3px solid #fff; border-radius: 12px; opacity: .9; }
+.scanbox .laser { position: absolute; left: 15%; right: 15%; height: 2px; background: #3ee08f; top: 50%; box-shadow: 0 0 10px #3ee08f; animation: scan 1.6s ease-in-out infinite alternate; }
+@keyframes scan { from { transform: translateY(-38px); } to { transform: translateY(38px); } }
+@media (prefers-reduced-motion: reduce) { .scanbox .laser { animation: none; } }
+</style>
+
+<div class="app">
+  <div class="wrap preview-note"><span class="dot"></span><span><b>Aperçu web</b> · données d'exemple, rien n'est lu dans Santé</span></div>
+  <main id="screen" class="wrap"></main>
+</div>
+
+<nav class="tabbar" aria-label="Onglets">
+  <div class="tabbar-inner" role="tablist" id="tabbar"></div>
+</nav>
+
+<div id="sheetRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+// ---------- Icônes (traits simples, inspirées des SF Symbols) ----------
+const I = {
+  today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/></svg>',
+  food: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M4 3v5a3 3 0 0 0 6 0V3M7 11v10"/><path d="M17 21V3c-2.5 1.5-3.5 4-3.5 7.5V13H17"/></svg>',
+  sleep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V7M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="1.6"/></svg>',
+  sport: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4" r="2"/><path d="M6 21l3-6 3 2 1 4M9 15l1.5-5L14 8l3 3 3 1M10.5 10L7 11l-2 3"/></svg>',
+  profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.3-2 3.2-3 5.5-3s4.2 1 5.5 3"/></svg>',
+  flame: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3.5 5 5.5 5 11a5 5 0 0 1-10 0c0-2.2 1-3.8 2.2-5 .2 1.6 1 2.6 2.3 3C11 8.5 11 5 12 2z"/></svg>',
+  scale: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="M8.5 10a4 4 0 0 1 7 0M12 10l1.3-2"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>',
+  bars: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="16" y="9" width="4" height="11" rx="1"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  barcode: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V4h3M18 4h3v3M21 17v3h-3M6 20H3v-3M7 8v8M10 8v8M13 8v8M17 8v8"/></svg>',
+  pencil: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',
+  search: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>',
+  sunrise: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 9a5 5 0 0 1 5 5H7a5 5 0 0 1 5-5zM3 16h18v2H3zM11 3h2v4h-2z"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4.5"/><path d="M11 1h2v4h-2zM11 19h2v4h-2zM1 11h4v2H1zM19 11h4v2h-4z"/></svg>',
+  carrot: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8l2 2-9.5 11.5c-1 .8-2.8-1-2-2L14 8zM15 3c1 1.5 1 3 0 4 1-1 2.5-1 4 0-1.5 1-3 1.2-4 0z"/></svg>',
+  stars: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 15a7 7 0 0 1-8.5-9.5A7.5 7.5 0 1 0 17.5 17 7 7 0 0 1 16 15zM17 3l.8 1.7 1.7.8-1.7.8L17 8l-.8-1.7-1.7-.8 1.7-.8z"/></svg>',
+  run: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4" r="2"/><path d="M6 21l3-6 3 2 1 4M9 15l1.5-5L14 8l3 3 3 1M10.5 10L7 11l-2 3"/></svg>',
+  dumbbell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 10v4M6 7v10M18 7v10M21 10v4M6 12h12"/></svg>',
+  bike: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-7h5l3 7M10 9l2 7h-6M13 6h3"/></svg>',
+  ball: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 4.5h-5L8 10z"/></svg>',
+};
+
+// ---------- Données (base d'aliments identique à l'app) ----------
+const DB = [
+ ["Riz blanc cuit",130,2.7,28,0.3,200],["Pâtes cuites",150,5.5,30,0.9,250],["Semoule / couscous cuit",115,4,23,0.2,200],
+ ["Quinoa cuit",120,4.4,21,1.9,180],["Pomme de terre cuite",85,2,18,0.1,200],["Patate douce cuite",90,2,20,0.2,200],
+ ["Pain baguette",270,9,55,1.5,60],["Pain complet",240,9,44,3,50],["Flocons d'avoine",370,13,60,7,60],
+ ["Céréales petit-déjeuner",380,8,78,3,40],["Lentilles cuites",115,9,17,0.4,200],["Pois chiches cuits",140,8,19,2.5,150],
+ ["Blanc de poulet cuit",165,31,0,3.6,150],["Steak haché 5 % cuit",155,26,0,5.5,125],["Steak haché 15 % cuit",250,24,0,17,125],
+ ["Saumon cuit",200,22,0,12,130],["Thon au naturel",115,26,0,1,100],["Jambon blanc",115,20,1,3.5,40],
+ ["Œuf entier",140,12.5,0.5,10,50],["Tofu",125,13,2,7.5,100],["Whey protéine (poudre)",380,78,6,5,30],
+ ["Lait demi-écrémé",46,3.3,4.8,1.6,250],["Yaourt nature",60,4,5,3,125],["Skyr / fromage blanc 0 %",60,10,4,0.2,150],
+ ["Fromage blanc 3 %",85,7.5,4,3.5,100],["Emmental",380,28,0,30,30],["Camembert",270,20,0.5,21,30],
+ ["Beurre",740,0.7,0.6,82,10],["Huile d'olive",900,0,0,100,10],["Beurre de cacahuète",600,25,15,50,30],
+ ["Amandes",600,21,9,52,30],["Noix",680,15,7,65,30],["Avocat",160,2,2,15,100],["Banane",90,1.1,20,0.3,120],
+ ["Pomme",53,0.3,11.5,0.2,150],["Orange",47,0.9,9,0.1,150],["Fruits rouges",45,1,7,0.4,100],["Dattes",280,2.5,66,0.4,30],
+ ["Brocoli cuit",35,2.5,4,0.4,150],["Haricots verts cuits",30,2,4,0.2,150],["Carottes",35,0.8,7,0.2,100],
+ ["Tomate",18,0.9,3,0.2,120],["Salade verte",15,1.3,1.5,0.2,50],["Croissant",410,8,45,21,60],["Biscuits",470,6.5,70,18,30],
+ ["Chocolat noir 70 %",580,8,33,42,20],["Miel",320,0.4,80,0,20],["Confiture",250,0.4,60,0.1,20],
+ ["Jus d'orange",45,0.7,10,0.1,250],["Soda sucré",42,0,10.6,0,330],["Bière",43,0.4,3.5,0,250],
+ ["Pizza",260,11,30,10,300],["Burger (fast-food)",260,13,26,11,220],["Frites",300,3.5,37,15,150],["Kebab (sandwich)",230,12,22,10,350],
+].map(([name,kcal,p,c,f,portion]) => ({ id: name, name, base: { kcal, p, c, f }, isPortion: false, def: portion }));
+const byName = n => DB.find(x => x.name === n);
+
+const MEALS = [
+  { id: "breakfast", label: "Petit-déjeuner", icon: "sunrise" },
+  { id: "lunch", label: "Déjeuner", icon: "sun" },
+  { id: "snack", label: "Collation", icon: "carrot" },
+  { id: "dinner", label: "Dîner", icon: "stars" },
+];
+
+const PROFILE = { weight: 72.4, height: 180, age: 24, male: true, surplus: 300, proteinPerKg: 1.8, activity: 1.55 };
+const BMR = 10 * PROFILE.weight + 6.25 * PROFILE.height - 5 * PROFILE.age + 5;
+const AVG_BASE = 1760 + 680; // repos + actif moyen mesuré (exemple Apple Watch)
+const TARGET = (AVG_BASE + PROFILE.surplus) / 0.9;
+const PROTEIN_TARGET = PROFILE.weight * PROFILE.proteinPerKg;
+
+const DAY = 86400000;
+const today0 = (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
+const dayKey = d => { const x = new Date(d); x.setHours(0,0,0,0); return x.getTime(); };
+
+function macrosFor(item, amount) {
+  const k = item.isPortion ? amount : amount / 100;
+  return { kcal: item.base.kcal * k, p: item.base.p * k, c: item.base.c * k, f: item.base.f * k };
+}
+function makeEntry(day, meal, name, grams) {
+  const item = byName(name);
+  return { id: Math.random().toString(36).slice(2), day, meal, name, qty: grams, grams: true, ...macrosFor(item, grams) };
+}
+
+// Journal d'exemple : aujourd'hui + 13 jours passés
+let entries = [];
+(function seed() {
+  const t = today0.getTime();
+  entries.push(
+    makeEntry(t, "breakfast", "Flocons d'avoine", 80), makeEntry(t, "breakfast", "Lait demi-écrémé", 250), makeEntry(t, "breakfast", "Banane", 120),
+    makeEntry(t, "lunch", "Riz blanc cuit", 250), makeEntry(t, "lunch", "Blanc de poulet cuit", 160), makeEntry(t, "lunch", "Huile d'olive", 10), makeEntry(t, "lunch", "Haricots verts cuits", 150),
+    makeEntry(t, "snack", "Skyr / fromage blanc 0 %", 150), makeEntry(t, "snack", "Amandes", 30),
+  );
+  // jours passés : apports pour obtenir des balances réalistes (jours 9 et 4 non saisis)
+  const pastIntake = [3020, 2890, null, 2700, 3110, 2950, 2560, 3210, 2980, null, 2870, 3150, 2940];
+  const pastActive = [610, 720, 540, 880, 650, 590, 510, 940, 700, 620, 660, 760, 690];
+  const pastBasal  = [1755, 1762, 1758, 1770, 1748, 1761, 1752, 1773, 1766, 1759, 1750, 1768, 1760];
+  window.HISTORY = [];
+  for (let i = 13; i >= 1; i--) {
+    const idx = 13 - i, day = t - i * DAY;
+    window.HISTORY.push({ day, intake: pastIntake[idx], active: pastActive[idx], basal: pastBasal[idx] });
+  }
+})();
+
+const TODAY_HEALTH = { active: 412, steps: 8340, exercise: 38 };
+
+const NIGHTS = (() => {
+  const hrs = [7.4, 6.6, 7.9, 6.2, 7.1, 8.1, 6.9, 7.5, 5.9, 7.3, 7.8, 6.8, 7.0, 7.2];
+  const bed = [23.4, 0.3, 23.1, 0.6, 23.8, 22.9, 23.9, 23.5, 1.1, 23.6, 23.2, 0.2, 23.7, 23.68];
+  return hrs.map((h, i) => {
+    const day = today0.getTime() - (13 - i) * DAY;
+    const deep = h * 0.16, rem = h * 0.22, core = h - deep - rem;
+    return { day, hours: h, deep, rem, core, awake: 0.35 + (i % 3) * 0.1, bed: bed[i] };
+  });
+})();
+
+const WORKOUTS = [
+  { name: "Musculation", icon: "dumbbell", d: -0, h: "18:10", min: 62, kcal: 318 },
+  { name: "Course à pied", icon: "run", d: -2, h: "07:30", min: 34, kcal: 402, km: 6.1 },
+  { name: "Musculation", icon: "dumbbell", d: -3, h: "18:25", min: 58, kcal: 296 },
+  { name: "Vélo", icon: "bike", d: -5, h: "11:00", min: 75, kcal: 610, km: 24.8 },
+  { name: "Musculation", icon: "dumbbell", d: -6, h: "18:05", min: 65, kcal: 331 },
+  { name: "Football", icon: "ball", d: -8, h: "20:00", min: 90, kcal: 720 },
+  { name: "Musculation", icon: "dumbbell", d: -10, h: "18:15", min: 60, kcal: 305 },
+];
+
+// ---------- Format ----------
+const nf0 = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+const kcal = v => nf0.format(Math.round(v));
+const g = v => `${Math.round(v)} g`;
+const num = (v, d = 1) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: d }).format(v);
+const signed = (v, d = 1) => (v >= 0 ? "+" : "−") + new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(Math.abs(v));
+const dur = h => { const m = Math.round(h * 60); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")}`; };
+const clock = h => { const x = ((h % 24) + 24) % 24; const hh = Math.floor(x), mm = Math.round((x - hh) * 60); return `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`; };
+const dayNum = ts => new Date(ts).getDate();
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ---------- Calculs (mêmes règles que EnergyAnalysis.swift) ----------
+function intakeOn(ts) { return entries.filter(e => e.day === ts).reduce((a, e) => ({ kcal: a.kcal + e.kcal, p: a.p + e.p, c: a.c + e.c, f: a.f + e.f }), { kcal: 0, p: 0, c: 0, f: 0 }); }
+function analysis() {
+  const hist = window.HISTORY.filter(h => h.intake).map(h => {
+    const exp = h.basal + h.active + 0.1 * h.intake;
+    return { day: h.day, balance: h.intake - exp };
+  });
+  const last7 = hist.filter(h => h.day >= today0.getTime() - 7 * DAY);
+  const avg = last7.length >= 3 ? last7.reduce((a, h) => a + h.balance, 0) / last7.length : null;
+  const kgWeek = avg == null ? null : avg * 7 / 7700;
+  let verdict = "none";
+  if (avg != null) verdict = avg > 150 ? "gain" : avg < -150 ? "loss" : "stable";
+  return { hist, last7, avg, kgWeek, verdict, trend: 0.21 };
+}
+
+// ---------- Graphiques SVG ----------
+function barChart({ data, height = 150, color, zeroLine = false, target = null, stacked = null, labelEvery = 2, unit = "" }) {
+  const W = 340, H = height, padL = 34, padR = 6, padT = 8, padB = 20;
+  const vals = stacked ? data.map(d => stacked.reduce((s, k) => s + d[k.key], 0)) : data.map(d => d.v);
+  let max = Math.max(...vals, target ?? -Infinity, 0), min = Math.min(...vals, 0);
+  const niceStep = v => { const p = Math.pow(10, Math.floor(Math.log10(v))); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; };
+  const step = niceStep((max - min) / 3 || 1);
+  max = Math.ceil(max / step) * step; min = Math.floor(min / step) * step;
+  const y = v => padT + (max - v) / (max - min) * (H - padT - padB);
+  const bw = (W - padL - padR) / data.length;
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">`;
+  for (let v = min; v <= max + 1e-9; v += step) {
+    s += `<line x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}" stroke="var(--sep)" stroke-width="1"/>`;
+    s += `<text x="${padL - 5}" y="${y(v) + 3.5}" font-size="9.5" text-anchor="end" fill="var(--muted)">${num(v, 1)}${unit}</text>`;
+  }
+  data.forEach((d, i) => {
+    const x = padL + i * bw + bw * 0.18, w = bw * 0.64;
+    if (stacked) {
+      let acc = 0;
+      stacked.forEach(k => { const v = d[k.key]; s += `<rect x="${x}" y="${y(acc + v)}" width="${w}" height="${Math.max(0, y(acc) - y(acc + v))}" fill="${k.color}"/>`; acc += v; });
+      const top = y(acc); s += `<rect x="${x}" y="${top}" width="${w}" height="3" rx="1.5" fill="none"/>`;
+    } else if (d.v != null) {
+      const y0 = y(0), y1 = y(d.v), c = typeof color === "function" ? color(d.v) : color;
+      s += `<rect x="${x}" y="${Math.min(y0, y1)}" width="${w}" height="${Math.max(1, Math.abs(y1 - y0))}" rx="2.5" fill="${c}"/>`;
+    }
+    if (i % labelEvery === (data.length - 1) % labelEvery) s += `<text x="${x + w / 2}" y="${H - 5}" font-size="9.5" text-anchor="middle" fill="var(--muted)">${d.label}</text>`;
+  });
+  if (zeroLine) s += `<line x1="${padL}" x2="${W - padR}" y1="${y(0)}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1"/>`;
+  if (target != null) s += `<line x1="${padL}" x2="${W - padR}" y1="${y(target)}" y2="${y(target)}" stroke="var(--muted)" stroke-dasharray="4 4" stroke-width="1"/>`;
+  return s + "</svg>";
+}
+
+// ---------- Écrans ----------
+const state = { tab: "today", logDay: today0.getTime() };
+
+function tile(v, u, c) { return `<div class="tile"><div class="v">${v}${u ? `<span>${u}</span>` : ""}</div><div class="c">${c}</div></div>`; }
+function macroBar(label, v, target, color) {
+  return `<div class="macro"><div class="macro-head"><span>${label}</span><span class="sub tabular">${target ? `${g(v)} / ${g(target)}` : g(v)}</span></div>${target ? `<div class="progress"><i style="width:${Math.min(100, v / target * 100)}%;background:${color}"></i></div>` : ""}</div>`;
+}
+function cardTitle(icon, text, color) { return `<div class="card-title" style="color:${color}">${I[icon]}<span>${text}</span></div>`; }
+
+function viewToday() {
+  const a = analysis(), t = intakeOn(today0.getTime()), remain = TARGET - t.kcal;
+  const night = NIGHTS[NIGHTS.length - 1];
+  let verdictHtml = "";
+  if (a.verdict === "gain") verdictHtml = `<div class="verdict" style="color:var(--accent)">Oui</div>
+      <div class="small">Surplus moyen de <b>${signed(a.avg, 0)} kcal/jour</b> → environ <b>${signed(a.kgWeek, 2)} kg/semaine</b> (${signed(a.kgWeek * 4.3, 1)} kg/mois).</div>`;
+  else if (a.verdict === "stable") verdictHtml = `<div class="verdict" style="color:var(--blue)">Plutôt non</div><div class="small">Tu es proche de l'équilibre : ton poids devrait rester stable.</div>`;
+  else if (a.verdict === "loss") verdictHtml = `<div class="verdict" style="color:var(--red)">Non</div><div class="small">Tu es en déficit : environ ${signed(a.kgWeek, 2)} kg/semaine.</div>`;
+  else verdictHtml = `<div class="small">Saisis tes repas au moins 3 journées complètes pour obtenir un verdict.</div>`;
+
+  const chartData = a.hist.map(h => ({ v: h.balance, label: dayNum(h.day) }));
+  return `<h1 class="large">Aujourd'hui</h1>
+  <div class="stack">
+    <section class="card">
+      ${cardTitle("flame", "Calories du jour", "var(--orange)")}
+      <div><span class="big">${kcal(t.kcal)}</span> <span class="sub">/ ${kcal(TARGET)} kcal</span></div>
+      <div class="progress"><i style="width:${Math.min(100, t.kcal / TARGET * 100)}%;background:var(--orange)"></i></div>
+      <div class="small">${remain > 0 ? `Encore <b>${kcal(remain)} kcal</b> pour atteindre ton objectif de prise de poids (+${PROFILE.surplus} kcal/jour).` : `Objectif atteint (${kcal(-remain)} kcal au-dessus).`}</div>
+      ${macroBar("Protéines", t.p, PROTEIN_TARGET, "var(--red)")}
+      ${macroBar("Glucides", t.c, null)}
+      ${macroBar("Lipides", t.f, null)}
+      <div class="caption">Dépense moyenne mesurée sur 7 jours.</div>
+    </section>
+
+    <section class="card">
+      ${cardTitle("scale", "Vais-je prendre du poids ?", "var(--accent)")}
+      ${verdictHtml}
+      ${barChart({ data: chartData, color: v => v >= 0 ? "var(--accent)" : "var(--red)", zeroLine: true, target: PROFILE.surplus })}
+      <div class="caption">Balance quotidienne (apports − dépense) des jours saisis. Pointillés : ton objectif.</div>
+      <div class="divider"></div>
+      <div class="small">Balance réelle (Santé) : <b>${signed(a.trend, 2)} kg/semaine</b> sur 4 semaines.</div>
+    </section>
+
+    <div class="row2">
+      <section class="card">
+        ${cardTitle("bed", "Sommeil", "var(--indigo)").replace(I.bed, I.sleep)}
+        ${tile(dur(night.hours), "", `${clock(night.bed)} → ${clock(night.bed + night.hours + night.awake)}`)}
+      </section>
+      <section class="card">
+        ${cardTitle("flame", "Activité", "var(--pink)")}
+        ${tile(kcal(TODAY_HEALTH.active), "kcal", "énergie active")}
+        ${tile(nf0.format(TODAY_HEALTH.steps), "pas", "aujourd'hui")}
+      </section>
+    </div>
+  </div>`;
+}
+
+function viewFood() {
+  const d = state.logDay, isToday = d === today0.getTime();
+  const tot = intakeOn(d);
+  const dayLabel = isToday ? "Aujourd'hui" : new Date(d).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  let html = `<h1 class="large">Repas</h1><div class="stack">
+    <div class="list">
+      <div class="daysel"><button data-act="prevDay" aria-label="Jour précédent">‹</button><b style="text-transform:capitalize">${dayLabel}</b><button data-act="nextDay" aria-label="Jour suivant" ${isToday ? "disabled" : ""}>›</button></div>
+      <div class="item"><div class="tiles" style="width:100%">${tile(kcal(tot.kcal), "kcal", "total")}${tile(Math.round(tot.p), "g", "protéines")}${tile(Math.round(tot.c), "g", "glucides")}${tile(Math.round(tot.f), "g", "lipides")}</div></div>
+    </div>`;
+  if (!isToday && !entries.some(e => e.day === d)) html += `<p class="note">Jour d'exemple sans détail des repas. Reviens sur « Aujourd'hui » ou ajoute un aliment.</p>`;
+  for (const m of MEALS) {
+    const items = entries.filter(e => e.day === d && e.meal === m.id);
+    const sum = items.reduce((a, e) => a + e.kcal, 0);
+    html += `<div class="group-label"><span class="meal">${I[m.icon]}${m.label}</span><span class="tabular">${kcal(sum)} kcal</span></div><div class="list">`;
+    for (const e of items) {
+      html += `<div class="item"><div class="grow"><div class="name">${esc(e.name)}</div><div class="meta">${e.grams ? Math.round(e.qty) + " g" : num(e.qty) + " portion(s)"} · P ${Math.round(e.p)} · G ${Math.round(e.c)} · L ${Math.round(e.f)}</div></div><span class="end">${kcal(e.kcal)} kcal</span><button class="del" data-del="${e.id}" aria-label="Supprimer ${esc(e.name)}">✕</button></div>`;
+    }
+    html += `<button class="item action" data-add="${m.id}">${I.plus}<span>Ajouter un aliment</span></button></div>`;
+  }
+  return html + `</div>`;
+}
+
+function viewSleep() {
+  const n = NIGHTS[NIGHTS.length - 1];
+  const last7 = NIGHTS.slice(-7), avg = last7.reduce((a, x) => a + x.hours, 0) / 7;
+  const beds = last7.map(x => { let m = x.bed * 60 - 18 * 60; if (m < 0) m += 1440; return m; });
+  const mean = beds.reduce((a, b) => a + b, 0) / beds.length;
+  const spread = Math.sqrt(beds.reduce((a, b) => a + (b - mean) ** 2, 0) / beds.length);
+  const stages = [{ key: "deep", color: "var(--indigo)", label: "Profond" }, { key: "core", color: "var(--blue)", label: "Léger" }, { key: "rem", color: "var(--cyan)", label: "Paradoxal" }];
+  return `<h1 class="large">Sommeil</h1><div class="stack">
+    <section class="card">
+      ${cardTitle("moon", "Cette nuit", "var(--indigo)")}
+      <div class="big">${dur(n.hours)}</div>
+      <div class="small sub">Coucher ${clock(n.bed)} · Réveil ${clock(n.bed + n.hours + n.awake)}</div>
+      <div class="tiles">${tile(dur(n.deep), "", "profond")}${tile(dur(n.core), "", "léger")}${tile(dur(n.rem), "", "paradoxal")}${tile(dur(n.awake), "", "éveillé")}</div>
+    </section>
+    <section class="card">
+      ${cardTitle("bars", "14 dernières nuits", "var(--indigo)")}
+      <div class="tiles">${tile(dur(avg), "", "moyenne 7 nuits")}${tile("±" + Math.round(spread), "min", "régularité du coucher")}</div>
+      ${barChart({ data: NIGHTS.map(x => ({ ...x, label: dayNum(x.day) })), stacked: stages, target: 8, height: 180, unit: " h" })}
+      <div class="legend">${stages.map(s => `<span><i style="background:${s.color}"></i>${s.label}</span>`).join("")}<span>┄ 8 h recommandées</span></div>
+      <div class="caption">Pour la prise de muscle, vise 7 à 9 h par nuit avec des horaires réguliers : la majorité de l'hormone de croissance est sécrétée en sommeil profond.</div>
+    </section>
+  </div>`;
+}
+
+function viewSport() {
+  const week = WORKOUTS.filter(w => w.d > -7);
+  const actives = window.HISTORY.slice(-13).map(h => ({ v: h.active, label: dayNum(h.day) })).concat([{ v: TODAY_HEALTH.active, label: dayNum(today0) }]);
+  const dateLabel = w => { const d = new Date(today0.getTime() + w.d * DAY); return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) + " " + w.h; };
+  return `<h1 class="large">Sport</h1><div class="stack">
+    <div class="group-label">Aujourd'hui</div>
+    <div class="list"><div class="item"><div class="tiles" style="width:100%">${tile(kcal(TODAY_HEALTH.active), "kcal", "active")}${tile(nf0.format(TODAY_HEALTH.steps), "pas", "marche")}${tile(TODAY_HEALTH.exercise, "min", "exercice")}</div></div></div>
+    <div class="group-label">7 derniers jours</div>
+    <section class="card">
+      <div class="tiles">${tile(week.length, "", "séances")}${tile(dur(week.reduce((a, w) => a + w.min, 0) / 60), "", "durée totale")}${tile(kcal(week.reduce((a, w) => a + w.kcal, 0)), "kcal", "séances")}</div>
+      ${barChart({ data: actives, color: "var(--pink)", height: 140 })}
+      <div class="caption">Énergie active sur 14 jours. Chaque séance augmente ta dépense : pense à manger plus les jours d'entraînement.</div>
+    </section>
+    <div class="group-label">Séances (30 jours)</div>
+    <div class="list">${WORKOUTS.map(w => `<div class="item"><div class="icon-circle" style="color:var(--accent);background:var(--fill)">${I[w.icon]}</div><div class="grow"><div class="name">${w.name}</div><div class="meta">${dateLabel(w)}</div></div><div style="text-align:right"><div class="end">${dur(w.min / 60)}</div><div class="meta">${w.km ? num(w.km, 2) + " km · " : ""}${kcal(w.kcal)} kcal</div></div></div>`).join("")}</div>
+  </div>`;
+}
+
+function viewProfile() {
+  const row = (l, v) => `<div class="item"><span class="grow">${l}</span><span class="sub end">${v}</span></div>`;
+  return `<h1 class="large">Profil</h1><div class="stack">
+    <div class="group-label">Moi</div>
+    <div class="list">${row("Dernière pesée (Santé)", num(PROFILE.weight) + " kg")}${row("Taille", PROFILE.height + " cm")}${row("Âge", PROFILE.age + " ans")}${row("Sexe", "Homme")}<div class="item action">Importer depuis l'app Santé</div></div>
+    <div class="group-label">Objectif prise de poids</div>
+    <div class="list">${row("Surplus visé", "+" + PROFILE.surplus + " kcal/j")}${row("Protéines", num(PROFILE.proteinPerKg) + " g/kg")}${row("Objectif protéines", g(PROTEIN_TARGET))}</div>
+    <p class="note">Repères courants : +250 à +500 kcal/jour (≈ +0,25 à +0,5 kg/semaine) et 1,6 à 2,2 g de protéines par kg pour une prise de masse surtout musculaire, avec de la musculation.</p>
+    <div class="group-label">Si pas d'Apple Watch</div>
+    <div class="list">${row("Niveau d'activité", "Actif (3-5 séances/sem.)")}${row("Métabolisme de base", kcal(BMR) + " kcal")}</div>
+    <div class="group-label">Comment est calculé le verdict ?</div>
+    <div class="list"><div class="item small">Balance = calories mangées − (énergie au repos + énergie active + ~10 % des apports pour la digestion). Moyenne sur les 7 derniers jours saisis, puis ~7 700 kcal de surplus ≈ +1 kg. C'est une estimation : la courbe de ta balance reste la référence.</div></div>
+  </div>`;
+}
+
+const TABS = [
+  { id: "today", label: "Aujourd'hui", icon: "today", view: viewToday },
+  { id: "food", label: "Repas", icon: "food", view: viewFood },
+  { id: "sleep", label: "Sommeil", icon: "sleep", view: viewSleep },
+  { id: "sport", label: "Sport", icon: "sport", view: viewSport },
+  { id: "profile", label: "Profil", icon: "profile", view: viewProfile },
+];
+
+function render() {
+  document.getElementById("screen").innerHTML = TABS.find(t => t.id === state.tab).view();
+  document.getElementById("tabbar").innerHTML = TABS.map(t => `<button class="tab" role="tab" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${I[t.icon]}<span>${t.label}</span></button>`).join("");
+}
+
+// ---------- Feuille « Ajouter un aliment » ----------
+const sheet = { open: false, meal: "lunch", view: "list", query: "", item: null, amount: 0 };
+function recents() {
+  const seen = new Set(), out = [];
+  for (const e of [...entries].reverse()) { const k = e.name.toLowerCase(); if (seen.has(k)) continue; seen.add(k); out.push(byName(e.name) || { id: "r-" + k, name: e.name, base: { kcal: e.kcal, p: e.p, c: e.c, f: e.f }, isPortion: true, def: 1 }); if (out.length >= 8) break; }
+  return out;
+}
+function itemRow(it) {
+  return `<button class="item" data-pick="${esc(it.id)}"><div class="grow"><div class="name">${esc(it.name)}</div><div class="meta">${it.isPortion ? kcal(it.base.kcal) + " kcal / portion" : kcal(it.base.kcal) + " kcal / 100 g · P " + num(it.base.p) + " g"}</div></div><span class="chev">›</span></button>`;
+}
+const NUTELLA = { id: "off-3017620422003", name: "Nutella – Ferrero", base: { kcal: 539, p: 6.3, c: 57.5, f: 30.9 }, isPortion: false, def: 15 };
+let pickPool = [];
+
+function renderSheet() {
+  const root = document.getElementById("sheetRoot");
+  if (!sheet.open) { root.innerHTML = ""; return; }
+  const mealLabel = MEALS.find(m => m.id === sheet.meal).label;
+  let nav = "", body = "";
+  if (sheet.view === "list") {
+    const q = sheet.query.trim().toLowerCase();
+    const match = it => !q || it.name.toLowerCase().includes(q);
+    const rec = recents().filter(match), db = DB.filter(match);
+    pickPool = [...rec, ...db, NUTELLA];
+    nav = `<button class="l" data-sheet="close">Annuler</button><div class="t">${mealLabel}</div><span></span>`;
+    body = `<div class="wrap stack" style="padding-top:4px">
+      <div class="search">${I.search}<input id="q" type="search" placeholder="Rechercher un aliment ou une marque" value="${esc(sheet.query)}" autocomplete="off"></div>
+      <div class="seg" role="group" aria-label="Repas">${MEALS.map(m => `<button aria-pressed="${m.id === sheet.meal}" data-meal="${m.id}">${m.label.replace("Petit-déjeuner", "P.-déj.")}</button>`).join("")}</div>
+      <div class="list">
+        <button class="item action" data-sheet="scan"><div class="icon-circle" style="background:var(--fill)">${I.barcode}</div><span class="grow">Scanner un code-barres</span><span class="chev">›</span></button>
+        <button class="item action" data-sheet="manual"><div class="icon-circle" style="background:var(--fill)">${I.pencil}</div><span class="grow">Saisie manuelle (étiquette, plat…)</span><span class="chev">›</span></button>
+      </div>
+      ${q ? `<div class="group-label">Produits du commerce</div><div class="list"><div class="item small sub">Dans l'app, la recherche « ${esc(sheet.query)} » interroge Open Food Facts. Pas disponible dans cet aperçu web.</div></div>` : ""}
+      ${rec.length ? `<div class="group-label">Récents</div><div class="list">${rec.map(itemRow).join("")}</div>` : ""}
+      <div class="group-label">Aliments courants</div><div class="list">${db.length ? db.map(itemRow).join("") : `<div class="item sub small">Aucun aliment ne correspond.</div>`}</div>
+      <p class="note">Valeurs moyennes approximatives. Pour un produit précis, utilise le scan ou la saisie manuelle.</p>
+    </div>`;
+  } else if (sheet.view === "portion") {
+    const it = sheet.item, m = macrosFor(it, sheet.amount || 0);
+    nav = `<button class="l" data-sheet="back">‹ Retour</button><div class="t">Portion</div><span></span>`;
+    body = `<div class="wrap stack" style="padding-top:4px">
+      <div class="group-label">${esc(it.name)}</div>
+      <div class="list">
+        <div class="item"><span class="grow">${it.isPortion ? "Portions" : "Quantité"}</span><span class="field"><input id="amt" type="number" inputmode="decimal" min="0" value="${sheet.amount}"><span class="sub">${it.isPortion ? "×" : "g"}</span></span></div>
+        <div class="item"><span class="grow">Ajuster</span><span class="stepper"><button data-step="-1" aria-label="Moins">−</button><button data-step="1" aria-label="Plus">+</button></span></div>
+      </div>
+      <div class="group-label">Apport</div>
+      <div class="list" id="portionMacros">${portionRows(m)}</div>
+      <button class="primary" data-sheet="save">Ajouter à « ${mealLabel} »</button>
+    </div>`;
+  } else if (sheet.view === "scan") {
+    nav = `<button class="l" data-sheet="back">‹ Retour</button><div class="t">Scanner</div><span></span>`;
+    body = `<div class="wrap stack" style="padding-top:4px">
+      <div class="scanbox"><div class="frame"></div><div class="laser"></div></div>
+      <p class="note">Dans l'app, la caméra lit le code-barres et récupère le produit sur Open Food Facts. Ici, la caméra n'est pas utilisée : simule un scan avec un vrai produit testé (Nutella 400 g, code 3017620422003).</p>
+      <button class="primary" data-sheet="fakescan">Simuler le scan</button>
+    </div>`;
+  } else if (sheet.view === "manual") {
+    nav = `<button class="l" data-sheet="back">‹ Retour</button><div class="t">Saisie manuelle</div><span></span>`;
+    const f = (id, l, u) => `<div class="item"><span class="grow">${l}</span><span class="field"><input id="${id}" type="number" inputmode="decimal" min="0" placeholder="0"><span class="sub">${u}</span></span></div>`;
+    body = `<div class="wrap stack" style="padding-top:4px">
+      <div class="group-label">Aliment ou plat</div>
+      <div class="list"><div class="item"><input id="mname" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--fg);outline:none" placeholder="Nom (ex. : Pâtes bolognaise maison)"></div></div>
+      <div class="group-label">Pour la portion consommée</div>
+      <div class="list">${f("mk", "Calories", "kcal")}${f("mp", "Protéines", "g")}${f("mc", "Glucides", "g")}${f("mf", "Lipides", "g")}</div>
+      <p class="note">Seules les calories sont obligatoires.</p>
+      <button class="primary" data-sheet="savemanual">Ajouter</button>
+    </div>`;
+  }
+  root.innerHTML = `<div class="sheet-backdrop" data-sheet="close"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Ajouter un aliment"><div class="sheet-nav">${nav}</div><div class="sheet-body">${body}</div></div>`;
+}
+function portionRows(m) {
+  const r = (l, v) => `<div class="item"><span class="grow">${l}</span><span class="sub end">${v}</span></div>`;
+  return r("Calories", kcal(m.kcal) + " kcal") + r("Protéines", g(m.p)) + r("Glucides", g(m.c)) + r("Lipides", g(m.f));
+}
+function openSheet(meal) { Object.assign(sheet, { open: true, meal, view: "list", query: "", item: null }); renderSheet(); }
+function closeSheet() { sheet.open = false; renderSheet(); }
+function toast(msg) {
+  const r = document.getElementById("toastRoot"); r.innerHTML = `<div class="toast" role="status">${esc(msg)}</div>`;
+  clearTimeout(toast.t); toast.t = setTimeout(() => r.innerHTML = "", 1800);
+}
+function addEntry(name, qty, grams, m) {
+  const day = state.logDay;
+  entries.push({ id: Math.random().toString(36).slice(2), day, meal: sheet.meal, name, qty, grams, ...m });
+  closeSheet(); render(); toast(`${name} ajouté`);
+}
+
+// ---------- Événements ----------
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-tab],[data-add],[data-del],[data-act],[data-sheet],[data-pick],[data-meal],[data-step]");
+  if (!b) return;
+  const d = b.dataset;
+  if (d.tab) { state.tab = d.tab; render(); window.scrollTo(0, 0); }
+  else if (d.add) openSheet(d.add);
+  else if (d.del) { entries = entries.filter(x => x.id !== d.del); render(); toast("Supprimé"); }
+  else if (d.act === "prevDay") { state.logDay -= DAY; render(); }
+  else if (d.act === "nextDay" && state.logDay < today0.getTime()) { state.logDay += DAY; render(); }
+  else if (d.meal) { sheet.meal = d.meal; renderSheet(); }
+  else if (d.pick) { const it = pickPool.find(x => x.id === d.pick); if (it) { sheet.item = it; sheet.amount = it.def; sheet.view = "portion"; renderSheet(); } }
+  else if (d.step) { const st = sheet.item.isPortion ? 0.5 : 10; sheet.amount = Math.max(0, Math.round(((+sheet.amount || 0) + st * +d.step) * 10) / 10); renderSheet(); }
+  else if (d.sheet === "close") closeSheet();
+  else if (d.sheet === "back") { sheet.view = "list"; renderSheet(); }
+  else if (d.sheet === "scan" || d.sheet === "manual") { sheet.view = d.sheet; renderSheet(); }
+  else if (d.sheet === "fakescan") { sheet.item = NUTELLA; sheet.amount = NUTELLA.def; sheet.view = "portion"; renderSheet(); toast("Produit trouvé"); }
+  else if (d.sheet === "save") { const a = +sheet.amount; if (a > 0) addEntry(sheet.item.name, a, !sheet.item.isPortion, macrosFor(sheet.item, a)); }
+  else if (d.sheet === "savemanual") {
+    const v = id => parseFloat((document.getElementById(id).value || "0").replace(",", ".")) || 0;
+    const name = document.getElementById("mname").value.trim();
+    if (!name || v("mk") <= 0) { toast("Indique un nom et les calories"); return; }
+    addEntry(name, 1, false, { kcal: v("mk"), p: v("mp"), c: v("mc"), f: v("mf") });
+  }
+});
+document.addEventListener("input", e => {
+  if (e.target.id === "q") {
+    sheet.query = e.target.value; const pos = e.target.selectionStart; renderSheet();
+    const q = document.getElementById("q"); q.focus(); try { q.setSelectionRange(pos, pos); } catch (_) {}
+  } else if (e.target.id === "amt") {
+    sheet.amount = parseFloat(e.target.value) || 0;
+    document.getElementById("portionMacros").innerHTML = portionRows(macrosFor(sheet.item, sheet.amount));
+  }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && sheet.open) closeSheet(); });
+
+render();
+</script>
