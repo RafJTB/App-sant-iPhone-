@@ -1,133 +1,142 @@
 <title>Suivi Santé – aperçu</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
-/* Layout : une colonne façon iPhone (max 430 px), grand titre iOS, cartes groupées, barre d'onglets fixe en bas. */
+/* Layout : app iPhone sur fond blanc (max 430 px). Cartes gris très clair sans ombre, un anneau pour les calories,
+   pastilles de statut, barre d'onglets blanche translucide. Thème clair uniquement, comme l'app. */
 :root {
-  --bg: #F1F4F2;
-  --card: #FFFFFF;
-  --fill: #E9EEEB;
-  --fg: #111614;
-  --muted: #69736E;
-  --sep: rgba(40, 60, 50, .13);
-  --accent: #1E9E64;
-  --orange: #EE8320;
-  --red: #E0474C;
-  --blue: #2E7CDB;
-  --yellow: #D9A311;
-  --indigo: #5856D6;
-  --cyan: #2BA5DB;
-  --purple: #9452C9;
-  --pink: #E0396F;
-  --bar: rgba(248, 250, 249, .86);
-  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --round: ui-rounded, "SF Pro Rounded", -apple-system, "Segoe UI", Roboto, sans-serif;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #000000; --card: #1B1F1D; --fill: #2A2F2C; --fg: #F1F5F3; --muted: #97A19C;
-    --sep: rgba(255,255,255,.12); --accent: #33C27E; --orange: #FF9F3A; --red: #FF5D61;
-    --blue: #4A95F0; --yellow: #F2C230; --indigo: #7C7AF0; --cyan: #5AC8FA; --purple: #B57BE6; --pink: #FF5C8D;
-    --bar: rgba(22, 25, 24, .86);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #000000; --card: #1B1F1D; --fill: #2A2F2C; --fg: #F1F5F3; --muted: #97A19C;
-  --sep: rgba(255,255,255,.12); --accent: #33C27E; --orange: #FF9F3A; --red: #FF5D61;
-  --blue: #4A95F0; --yellow: #F2C230; --indigo: #7C7AF0; --cyan: #5AC8FA; --purple: #B57BE6; --pink: #FF5C8D;
-  --bar: rgba(22, 25, 24, .86);
-  color-scheme: dark;
+  color-scheme: light;
+  --bg: #FFFFFF;
+  --surface: #F4F6F5;
+  --fg: #0E1311;
+  --muted: #6E7773;
+  --sep: rgba(14, 19, 17, .08);
+  --track: rgba(14, 19, 17, .07);
+  --accent: #12A06A;
+  --orange: #F07F1A;
+  --red: #E5484D;
+  --blue: #2F7BE0;
+  --indigo: #5B57D6;
+  --cyan: #2CA8DE;
+  --pink: #E23D72;
+  --bar: rgba(255, 255, 255, .9);
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { background: var(--bg); }
-body { color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased; }
+body { color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; font-feature-settings: "cv11", "ss01"; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
 
-.app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
-.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.preview-note { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); padding-block: 10px 0; }
-.preview-note b { color: var(--accent); font-weight: 600; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+.wrap { padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.preview-note { display: flex; gap: 8px; align-items: center; justify-content: center; font-size: 11.5px; color: var(--muted); padding-block: 10px 2px; }
+.preview-note b { color: var(--fg); font-weight: 600; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; }
 
-h1.large { font-size: 32px; font-weight: 700; letter-spacing: -.02em; margin: 6px 0 14px; text-wrap: balance; }
+.head { padding-block: 18px 16px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+h1.large { font-size: 34px; font-weight: 800; letter-spacing: -.035em; margin: 2px 0 0; line-height: 1.1; text-wrap: balance; }
 .stack { display: flex; flex-direction: column; gap: 14px; }
-.card { background: var(--card); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.card-title { display: flex; align-items: center; gap: 7px; font-size: 16px; font-weight: 600; }
-.card-title svg { width: 18px; height: 18px; flex: none; }
+.card { background: var(--surface); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.card-title { display: flex; align-items: center; gap: 9px; font-size: 14.5px; font-weight: 600; color: var(--fg); }
+.card-title .ic { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, currentColor 13%, transparent); flex: none; }
+.card-title .ic svg { width: 16px; height: 16px; }
+.card-title .lbl { color: var(--fg); }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.big { font-family: var(--round); font-size: 40px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.big { font-size: 40px; font-weight: 700; letter-spacing: -.035em; font-variant-numeric: tabular-nums; line-height: 1.05; }
 .sub { color: var(--muted); }
-.small { font-size: 13px; }
-.caption { font-size: 12px; color: var(--muted); }
+.small { font-size: 13.5px; line-height: 1.5; }
+.caption { font-size: 12px; color: var(--muted); line-height: 1.45; }
 .tabular { font-variant-numeric: tabular-nums; }
-.progress { height: 8px; border-radius: 4px; background: var(--fill); overflow: hidden; }
-.progress > i { display: block; height: 100%; border-radius: 4px; }
-.macro { display: flex; flex-direction: column; gap: 5px; }
-.macro-head { display: flex; justify-content: space-between; font-size: 14px; gap: 8px; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 8px; }
-.tile .v { font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.tile .v span { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+.progress { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.progress > i { display: block; height: 100%; border-radius: 3px; }
+.macro { display: flex; flex-direction: column; gap: 6px; }
+.macro-head { display: flex; justify-content: space-between; font-size: 13px; gap: 8px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 10px; }
+.tile .v { font-size: 20px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.tile .v span { font-size: 12.5px; font-weight: 500; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
 .tile .c { font-size: 12px; color: var(--muted); }
-.verdict { font-size: 26px; font-weight: 700; }
 .divider { height: 1px; background: var(--sep); }
 .chart { width: 100%; height: auto; display: block; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
-.legend span { display: inline-flex; align-items: center; gap: 5px; }
-.legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
-/* listes groupées iOS */
-.group-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 0 4px; margin-bottom: -6px; display: flex; justify-content: space-between; gap: 8px; }
+.hero { display: grid; grid-template-columns: 124px 1fr; gap: 18px; align-items: center; }
+.ring { position: relative; width: 124px; height: 124px; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring .center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.ring .center b { font-size: 25px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.ring .center span { font-size: 11px; color: var(--muted); }
+.kv { display: flex; flex-direction: column; }
+.kv .k { font-size: 12px; color: var(--muted); }
+.kv .v { font-size: 20px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: color-mix(in srgb, currentColor 12%, transparent); align-self: flex-start; }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.projection { font-size: 32px; font-weight: 800; letter-spacing: -.04em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.projection span { font-size: 15px; font-weight: 600; color: var(--muted); letter-spacing: 0; margin-left: 4px; }
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.compare > div { background: var(--bg); border-radius: 14px; padding: 10px 12px; }
+.compare .k { font-size: 11.5px; color: var(--muted); }
+.compare .v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* listes groupées */
+.group-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; padding: 6px 4px 0; margin-bottom: -6px; display: flex; justify-content: space-between; gap: 8px; }
 .group-label .meal { display: inline-flex; align-items: center; gap: 6px; }
-.group-label svg { width: 15px; height: 15px; }
-.list { background: var(--card); border-radius: 14px; overflow: hidden; }
-.item { display: flex; align-items: center; gap: 12px; padding: 11px 16px; min-height: 48px; position: relative; width: 100%; text-align: left; }
+.group-label svg { width: 14px; height: 14px; }
+.list { background: var(--surface); border-radius: 18px; overflow: hidden; }
+.item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; min-height: 50px; position: relative; width: 100%; text-align: left; }
 .item + .item::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: var(--sep); }
 .item .grow { flex: 1; min-width: 0; }
-.item .name { overflow-wrap: anywhere; }
+.item .name { overflow-wrap: anywhere; font-weight: 500; }
 .item .meta { font-size: 12px; color: var(--muted); }
-.item .end { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.item.action { color: var(--accent); font-weight: 500; }
+.item .end { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 500; }
+.item.action { color: var(--accent); font-weight: 600; }
 .item .chev { color: var(--muted); opacity: .6; }
-.icon-circle { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: none; }
-.icon-circle svg { width: 20px; height: 20px; }
-.del { color: var(--red); font-size: 13px; padding: 4px 6px; }
-.daysel { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; }
-.daysel button { color: var(--accent); padding: 6px 10px; font-size: 18px; }
-.daysel button:disabled { opacity: .3; cursor: default; }
+.icon-circle { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex: none; background: var(--bg); }
+.icon-circle svg { width: 19px; height: 19px; }
+.del { color: var(--muted); font-size: 13px; padding: 4px 6px; border-radius: 6px; }
+.del:hover { color: var(--red); }
+.daysel { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; }
+.daysel b { font-weight: 600; }
+.daysel button { color: var(--accent); width: 36px; height: 36px; border-radius: 10px; font-size: 20px; background: var(--bg); }
+.daysel button:disabled { opacity: .35; cursor: default; }
 
 /* barre d'onglets */
-.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--bar); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-top: 1px solid var(--sep);
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--bar); -webkit-backdrop-filter: saturate(1.6) blur(20px); backdrop-filter: saturate(1.6) blur(20px); border-top: 1px solid var(--sep);
   padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); }
 .tabbar-inner { max-width: 430px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
-.tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 6px; font-size: 10px; color: var(--muted); }
-.tab svg { width: 24px; height: 24px; }
+.tab { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 7px; font-size: 10.5px; font-weight: 500; color: #9AA29E; }
+.tab svg { width: 23px; height: 23px; }
 .tab[aria-selected="true"] { color: var(--accent); }
 
 /* feuille d'ajout */
-.sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 30; }
-.sheet { position: fixed; left: 0; right: 0; bottom: 0; top: calc(env(safe-area-inset-top, 0px) + 28px); z-index: 31; max-width: 430px; margin: 0 auto; background: var(--bg); border-radius: 14px 14px 0 0; display: flex; flex-direction: column; overflow: hidden; animation: up .28s ease-out; }
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(14,19,17,.28); z-index: 30; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; top: calc(env(safe-area-inset-top, 0px) + 28px); z-index: 31; max-width: 430px; margin: 0 auto; background: var(--bg); border-radius: 18px 18px 0 0; display: flex; flex-direction: column; overflow: hidden; animation: up .28s ease-out; }
 @keyframes up { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
-.sheet-nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 12px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); }
+.sheet-nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 14px max(20px, env(safe-area-inset-right, 0px)) 8px max(20px, env(safe-area-inset-left, 0px)); }
 .sheet-nav .t { font-weight: 600; text-align: center; }
-.sheet-nav .l { color: var(--accent); justify-self: start; }
+.sheet-nav .l { color: var(--accent); justify-self: start; font-weight: 500; }
 .sheet-body { overflow-y: auto; flex: 1; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
-.search { display: flex; align-items: center; gap: 8px; background: var(--fill); border-radius: 10px; padding: 8px 10px; }
+.search { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 12px; padding: 10px 12px; color: var(--muted); }
 .search input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; color: var(--fg); outline: none; }
-.seg { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--fill); border-radius: 9px; padding: 2px; gap: 2px; }
-.seg button { font-size: 12.5px; padding: 6px 2px; border-radius: 7px; }
-.seg button[aria-pressed="true"] { background: var(--card); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); border-radius: 11px; padding: 3px; gap: 2px; }
+.seg button { font-size: 12.5px; font-weight: 500; padding: 7px 2px; border-radius: 8px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--fg); font-weight: 600; box-shadow: 0 1px 2px rgba(14,19,17,.1); }
 .field { display: flex; align-items: center; gap: 8px; }
-.field input { width: 96px; text-align: right; border: 0; background: var(--fill); border-radius: 8px; padding: 7px 9px; font: inherit; color: var(--fg); font-variant-numeric: tabular-nums; }
-.stepper { display: inline-flex; background: var(--fill); border-radius: 8px; overflow: hidden; }
-.stepper button { width: 44px; height: 32px; font-size: 20px; }
+.field input { width: 96px; text-align: right; border: 0; background: var(--bg); border-radius: 9px; padding: 8px 10px; font: inherit; color: var(--fg); font-variant-numeric: tabular-nums; }
+.stepper { display: inline-flex; background: var(--bg); border-radius: 9px; overflow: hidden; }
+.stepper button { width: 44px; height: 34px; font-size: 20px; }
 .stepper button + button { border-left: 1px solid var(--sep); }
-.primary { background: var(--accent); color: #fff; font-weight: 600; border-radius: 12px; padding: 14px; width: 100%; }
+.primary { background: var(--fg); color: var(--bg); font-weight: 600; border-radius: 14px; padding: 15px; width: 100%; }
 .primary:disabled { opacity: .45; }
 .note { font-size: 12px; color: var(--muted); padding: 0 4px; }
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 9px 16px; border-radius: 20px; font-size: 14px; z-index: 40; white-space: nowrap; }
-.scanbox { aspect-ratio: 4 / 3; max-width: 100%; border-radius: 14px; background: #0d1210; display: grid; place-items: center; position: relative; overflow: hidden; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(100px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; z-index: 40; white-space: nowrap; }
+.scanbox { aspect-ratio: 4 / 3; max-width: 100%; border-radius: 18px; background: #0d1210; display: grid; place-items: center; position: relative; overflow: hidden; }
 .scanbox .frame { width: 70%; height: 38%; border: 3px solid #fff; border-radius: 12px; opacity: .9; }
 .scanbox .laser { position: absolute; left: 15%; right: 15%; height: 2px; background: #3ee08f; top: 50%; box-shadow: 0 0 10px #3ee08f; animation: scan 1.6s ease-in-out infinite alternate; }
 @keyframes scan { from { transform: translateY(-38px); } to { transform: translateY(38px); } }
@@ -135,7 +144,7 @@ h1.large { font-size: 32px; font-weight: 700; letter-spacing: -.02em; margin: 6p
 </style>
 
 <div class="app">
-  <div class="wrap preview-note"><span class="dot"></span><span><b>Aperçu web</b> · données d'exemple, rien n'est lu dans Santé</span></div>
+  <div class="wrap preview-note"><span class="dot"></span><span><b>Aperçu web</b> · données d'exemple</span></div>
   <main id="screen" class="wrap"></main>
 </div>
 
@@ -311,7 +320,7 @@ function barChart({ data, height = 150, color, zeroLine = false, target = null, 
       const top = y(acc); s += `<rect x="${x}" y="${top}" width="${w}" height="3" rx="1.5" fill="none"/>`;
     } else if (d.v != null) {
       const y0 = y(0), y1 = y(d.v), c = typeof color === "function" ? color(d.v) : color;
-      s += `<rect x="${x}" y="${Math.min(y0, y1)}" width="${w}" height="${Math.max(1, Math.abs(y1 - y0))}" rx="2.5" fill="${c}"/>`;
+      s += `<rect x="${x}" y="${Math.min(y0, y1)}" width="${w}" height="${Math.max(1, Math.abs(y1 - y0))}" rx="3.5" fill="${c}"/>`;
     }
     if (i % labelEvery === (data.length - 1) % labelEvery) s += `<text x="${x + w / 2}" y="${H - 5}" font-size="9.5" text-anchor="middle" fill="var(--muted)">${d.label}</text>`;
   });
@@ -327,50 +336,69 @@ function tile(v, u, c) { return `<div class="tile"><div class="v">${v}${u ? `<sp
 function macroBar(label, v, target, color) {
   return `<div class="macro"><div class="macro-head"><span>${label}</span><span class="sub tabular">${target ? `${g(v)} / ${g(target)}` : g(v)}</span></div>${target ? `<div class="progress"><i style="width:${Math.min(100, v / target * 100)}%;background:${color}"></i></div>` : ""}</div>`;
 }
-function cardTitle(icon, text, color) { return `<div class="card-title" style="color:${color}">${I[icon]}<span>${text}</span></div>`; }
+function cardTitle(icon, text, color) { return `<div class="card-title"><span class="ic" style="color:${color}">${I[icon]}</span><span class="lbl">${text}</span></div>`; }
+const TODAY_LABEL = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+function header(title, eyebrow = TODAY_LABEL) { return `<header class="head"><div class="eyebrow">${eyebrow}</div><h1 class="large">${title}</h1></header>`; }
+function ring(pct, color) {
+  const r = 52, c = 2 * Math.PI * r, p = Math.max(0, Math.min(1, pct));
+  return `<svg viewBox="0 0 124 124" aria-hidden="true"><circle cx="62" cy="62" r="${r}" fill="none" stroke="var(--track)" stroke-width="11"/><circle cx="62" cy="62" r="${r}" fill="none" stroke="${color}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${c * p} ${c}"/></svg>`;
+}
 
 function viewToday() {
   const a = analysis(), t = intakeOn(today0.getTime()), remain = TARGET - t.kcal;
   const night = NIGHTS[NIGHTS.length - 1];
+  const week = WORKOUTS.filter(w => w.d > -7).length;
   let verdictHtml = "";
-  if (a.verdict === "gain") verdictHtml = `<div class="verdict" style="color:var(--accent)">Oui</div>
-      <div class="small">Surplus moyen de <b>${signed(a.avg, 0)} kcal/jour</b> → environ <b>${signed(a.kgWeek, 2)} kg/semaine</b> (${signed(a.kgWeek * 4.3, 1)} kg/mois).</div>`;
-  else if (a.verdict === "stable") verdictHtml = `<div class="verdict" style="color:var(--blue)">Plutôt non</div><div class="small">Tu es proche de l'équilibre : ton poids devrait rester stable.</div>`;
-  else if (a.verdict === "loss") verdictHtml = `<div class="verdict" style="color:var(--red)">Non</div><div class="small">Tu es en déficit : environ ${signed(a.kgWeek, 2)} kg/semaine.</div>`;
-  else verdictHtml = `<div class="small">Saisis tes repas au moins 3 journées complètes pour obtenir un verdict.</div>`;
+  if (a.verdict === "gain") verdictHtml = `<span class="chip" style="color:var(--accent)">Prise de poids probable</span>
+      <div class="projection">${signed(a.kgWeek, 2)}<span>kg / semaine</span></div>
+      <div class="small sub">Surplus moyen de <b style="color:var(--fg)">${signed(a.avg, 0)} kcal/jour</b> sur les ${a.last7.length} derniers jours saisis, soit environ ${signed(a.kgWeek * 4.3, 1)} kg par mois.</div>`;
+  else if (a.verdict === "stable") verdictHtml = `<span class="chip" style="color:var(--blue)">Poids stable</span><div class="small sub">Tu es proche de l'équilibre. Ajoute environ ${PROFILE.surplus} kcal/jour pour prendre du poids.</div>`;
+  else if (a.verdict === "loss") verdictHtml = `<span class="chip" style="color:var(--red)">Perte de poids probable</span><div class="projection">${signed(a.kgWeek, 2)}<span>kg / semaine</span></div>`;
+  else verdictHtml = `<div class="small sub">Saisis tes repas au moins 3 journées complètes pour obtenir un verdict.</div>`;
 
   const chartData = a.hist.map(h => ({ v: h.balance, label: dayNum(h.day) }));
-  return `<h1 class="large">Aujourd'hui</h1>
+  return `${header("Aujourd'hui")}
   <div class="stack">
     <section class="card">
       ${cardTitle("flame", "Calories du jour", "var(--orange)")}
-      <div><span class="big">${kcal(t.kcal)}</span> <span class="sub">/ ${kcal(TARGET)} kcal</span></div>
-      <div class="progress"><i style="width:${Math.min(100, t.kcal / TARGET * 100)}%;background:var(--orange)"></i></div>
-      <div class="small">${remain > 0 ? `Encore <b>${kcal(remain)} kcal</b> pour atteindre ton objectif de prise de poids (+${PROFILE.surplus} kcal/jour).` : `Objectif atteint (${kcal(-remain)} kcal au-dessus).`}</div>
-      ${macroBar("Protéines", t.p, PROTEIN_TARGET, "var(--red)")}
-      ${macroBar("Glucides", t.c, null)}
-      ${macroBar("Lipides", t.f, null)}
-      <div class="caption">Dépense moyenne mesurée sur 7 jours.</div>
+      <div class="hero">
+        <div class="ring">${ring(t.kcal / TARGET, "var(--orange)")}<div class="center"><b>${kcal(t.kcal)}</b><span>sur ${kcal(TARGET)}</span></div></div>
+        <div class="stack" style="gap:12px">
+          <div class="kv"><span class="k">${remain > 0 ? "Reste" : "Dépassé de"}</span><span class="v">${kcal(Math.abs(remain))} kcal</span></div>
+          ${macroBar("Protéines", t.p, PROTEIN_TARGET, "var(--red)")}
+          <div class="macro-head sub" style="white-space:nowrap;font-size:12.5px"><span>Glucides ${g(t.c)}</span><span>Lipides ${g(t.f)}</span></div>
+        </div>
+      </div>
+      <div class="caption">Objectif : dépense moyenne mesurée sur 7 jours + ${PROFILE.surplus} kcal de surplus.</div>
     </section>
 
     <section class="card">
       ${cardTitle("scale", "Vais-je prendre du poids ?", "var(--accent)")}
       ${verdictHtml}
       ${barChart({ data: chartData, color: v => v >= 0 ? "var(--accent)" : "var(--red)", zeroLine: true, target: PROFILE.surplus })}
-      <div class="caption">Balance quotidienne (apports − dépense) des jours saisis. Pointillés : ton objectif.</div>
-      <div class="divider"></div>
-      <div class="small">Balance réelle (Santé) : <b>${signed(a.trend, 2)} kg/semaine</b> sur 4 semaines.</div>
+      <div class="caption">Balance quotidienne (apports − dépense) des jours saisis. Pointillés : ton objectif de +${PROFILE.surplus} kcal.</div>
+      <div class="compare">
+        <div><div class="k">Prévision (repas)</div><div class="v">${signed(a.kgWeek ?? 0, 2)} kg/sem.</div></div>
+        <div><div class="k">Balance réelle (Santé)</div><div class="v">${signed(a.trend, 2)} kg/sem.</div></div>
+      </div>
     </section>
 
     <div class="row2">
       <section class="card">
-        ${cardTitle("bed", "Sommeil", "var(--indigo)").replace(I.bed, I.sleep)}
+        ${cardTitle("sleep", "Sommeil", "var(--indigo)")}
         ${tile(dur(night.hours), "", `${clock(night.bed)} → ${clock(night.bed + night.hours + night.awake)}`)}
       </section>
       <section class="card">
         ${cardTitle("flame", "Activité", "var(--pink)")}
         ${tile(kcal(TODAY_HEALTH.active), "kcal", "énergie active")}
-        ${tile(nf0.format(TODAY_HEALTH.steps), "pas", "aujourd'hui")}
+      </section>
+      <section class="card">
+        ${cardTitle("sport", "Pas", "var(--blue)")}
+        ${tile(nf0.format(TODAY_HEALTH.steps), "", `${TODAY_HEALTH.exercise} min d'exercice`)}
+      </section>
+      <section class="card">
+        ${cardTitle("bars", "Séances", "var(--accent)")}
+        ${tile(week, "", "sur 7 jours")}
       </section>
     </div>
   </div>`;
@@ -380,7 +408,7 @@ function viewFood() {
   const d = state.logDay, isToday = d === today0.getTime();
   const tot = intakeOn(d);
   const dayLabel = isToday ? "Aujourd'hui" : new Date(d).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
-  let html = `<h1 class="large">Repas</h1><div class="stack">
+  let html = `${header("Repas")}<div class="stack">
     <div class="list">
       <div class="daysel"><button data-act="prevDay" aria-label="Jour précédent">‹</button><b style="text-transform:capitalize">${dayLabel}</b><button data-act="nextDay" aria-label="Jour suivant" ${isToday ? "disabled" : ""}>›</button></div>
       <div class="item"><div class="tiles" style="width:100%">${tile(kcal(tot.kcal), "kcal", "total")}${tile(Math.round(tot.p), "g", "protéines")}${tile(Math.round(tot.c), "g", "glucides")}${tile(Math.round(tot.f), "g", "lipides")}</div></div>
@@ -405,7 +433,7 @@ function viewSleep() {
   const mean = beds.reduce((a, b) => a + b, 0) / beds.length;
   const spread = Math.sqrt(beds.reduce((a, b) => a + (b - mean) ** 2, 0) / beds.length);
   const stages = [{ key: "deep", color: "var(--indigo)", label: "Profond" }, { key: "core", color: "var(--blue)", label: "Léger" }, { key: "rem", color: "var(--cyan)", label: "Paradoxal" }];
-  return `<h1 class="large">Sommeil</h1><div class="stack">
+  return `${header("Sommeil")}<div class="stack">
     <section class="card">
       ${cardTitle("moon", "Cette nuit", "var(--indigo)")}
       <div class="big">${dur(n.hours)}</div>
@@ -426,7 +454,7 @@ function viewSport() {
   const week = WORKOUTS.filter(w => w.d > -7);
   const actives = window.HISTORY.slice(-13).map(h => ({ v: h.active, label: dayNum(h.day) })).concat([{ v: TODAY_HEALTH.active, label: dayNum(today0) }]);
   const dateLabel = w => { const d = new Date(today0.getTime() + w.d * DAY); return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) + " " + w.h; };
-  return `<h1 class="large">Sport</h1><div class="stack">
+  return `${header("Sport")}<div class="stack">
     <div class="group-label">Aujourd'hui</div>
     <div class="list"><div class="item"><div class="tiles" style="width:100%">${tile(kcal(TODAY_HEALTH.active), "kcal", "active")}${tile(nf0.format(TODAY_HEALTH.steps), "pas", "marche")}${tile(TODAY_HEALTH.exercise, "min", "exercice")}</div></div></div>
     <div class="group-label">7 derniers jours</div>
@@ -442,7 +470,7 @@ function viewSport() {
 
 function viewProfile() {
   const row = (l, v) => `<div class="item"><span class="grow">${l}</span><span class="sub end">${v}</span></div>`;
-  return `<h1 class="large">Profil</h1><div class="stack">
+  return `${header("Profil")}<div class="stack">
     <div class="group-label">Moi</div>
     <div class="list">${row("Dernière pesée (Santé)", num(PROFILE.weight) + " kg")}${row("Taille", PROFILE.height + " cm")}${row("Âge", PROFILE.age + " ans")}${row("Sexe", "Homme")}<div class="item action">Importer depuis l'app Santé</div></div>
     <div class="group-label">Objectif prise de poids</div>
