@@ -106,7 +106,7 @@ struct ProfileView: View {
                     }
     
                     Section("Comment est calculé le verdict ?") {
-                        Text("Balance = calories mangées − dépense, sur les 7 dernières journées validées. Au début, la dépense vient de Santé (énergie au repos + active + ~10 % pour la digestion). Après 14 journées validées et 4 pesées sur 2 semaines, elle est recalculée à partir de ta balance : apports moyens − variation de poids × 7 700 kcal/kg. C'est plus fiable que la montre.")
+                        Text("Balance = calories mangées − dépense, sur les 7 dernières journées validées. Au début, la dépense vient de Santé (énergie au repos + active + ~10 % pour la digestion). Après 20 journées validées sur 28 et 4 pesées sur 2 semaines, elle est recalculée à partir de ta balance : apports moyens − variation de poids × 7 700 kcal/kg. C'est plus fiable que la montre.")
                             .font(.footnote)
                     }
                 }

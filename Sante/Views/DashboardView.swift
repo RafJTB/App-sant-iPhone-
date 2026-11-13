@@ -188,7 +188,7 @@ private struct CalibrationRow: View {
                 .font(.subheadline)
                 Group {
                     if let watch = c.watchEstimate {
-                        Text("Calculée sur \(c.daysUsed) journées et \(c.weighIns) pesées. La montre estimait \(Fmt.kcal(watch)) kcal (\(Fmt.signed(watch - c.kcalPerDay, digits: 0))).")
+                        Text("Calculée sur \(c.daysUsed) journées sur \(EnergyAnalysis.calibrationWindow) et \(c.weighIns) pesées. La montre estimait \(Fmt.kcal(watch)) kcal (\(Fmt.signed(watch - c.kcalPerDay, digits: 0))).")
                     } else {
                         Text("Calculée sur \(c.daysUsed) journées et \(c.weighIns) pesées.")
                     }
@@ -207,7 +207,7 @@ private struct CalibrationRow: View {
                 ProgressView(value: Double(min(p.completeDays, EnergyAnalysis.minCalibrationDays)),
                              total: Double(EnergyAnalysis.minCalibrationDays))
                     .tint(Color.accentColor)
-                Text("Après \(EnergyAnalysis.minCalibrationDays) journées validées et au moins \(EnergyAnalysis.minWeighIns) pesées sur 2 semaines (\(p.weighIns) pour l'instant), l'app calcule ta vraie dépense à partir de ta balance et ajuste ton objectif.")
+                Text("Après \(EnergyAnalysis.minCalibrationDays) journées validées sur les \(EnergyAnalysis.calibrationWindow) dernières et au moins \(EnergyAnalysis.minWeighIns) pesées sur 2 semaines (\(p.weighIns) pour l'instant), l'app calcule ta vraie dépense à partir de ta balance et ajuste ton objectif.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }

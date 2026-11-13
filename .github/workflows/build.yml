@@ -15,6 +15,11 @@ jobs:
           if [ -z "$XC" ]; then echo "::error::Aucun Xcode 26+ sur ce runner"; ls /Applications | grep Xcode; exit 1; fi
           sudo xcode-select -s "$XC"
           xcodebuild -version
+      - name: Tests du moteur de calcul
+        run: |
+          xcrun swiftc -o enginetests Sante/Models/HealthModels.swift Sante/Services/WeightTrend.swift \
+            Sante/Services/EnergyCore.swift Sante/Services/SleepCore.swift Tools/EngineTests/main.swift
+          ./enginetests
       - name: Build (simulateur, sans signature)
         run: |
           set -o pipefail
