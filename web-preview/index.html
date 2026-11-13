@@ -21,6 +21,7 @@
   --indigo: #5B57D6;
   --cyan: #2CA8DE;
   --pink: #E23D72;
+  --teal: #0E97A6;
   --bar: rgba(255, 255, 255, .9);
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
@@ -82,6 +83,25 @@ h1.large { font-size: 34px; font-weight: 800; letter-spacing: -.035em; margin: 2
 .compare > div { background: var(--bg); border-radius: 14px; padding: 10px 12px; }
 .compare .k { font-size: 11.5px; color: var(--muted); }
 .compare .v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.warn { font-size: 13px; color: #B45A07; background: #FFF4E5; border-radius: 14px; padding: 11px 14px; line-height: 1.45; }
+.done-row { color: var(--accent); font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.link { color: var(--accent); font-weight: 600; padding: 4px 8px; border-radius: 8px; }
+.secondary { background: var(--bg); color: var(--teal); font-weight: 600; border-radius: 12px; padding: 12px; width: 100%; display: inline-flex; justify-content: center; gap: 6px; align-items: center; }
+.calib { display: flex; flex-direction: column; gap: 6px; }
+.calib .row { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.calib .row svg { width: 17px; height: 17px; color: var(--accent); flex: none; }
+.weight-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.weight-head .val { font-size: 30px; font-weight: 800; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.weight-head .delta { font-size: 14px; font-weight: 600; }
+.switch { position: relative; width: 51px; height: 31px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.switch i { position: absolute; inset: 0; border-radius: 999px; background: rgba(14,19,17,.14); transition: background .2s; pointer-events: none; }
+.switch i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.18); transition: transform .2s; }
+.switch input:checked + i { background: var(--accent); }
+.switch input:checked + i::after { transform: translateX(20px); }
+.switch input:focus-visible + i { outline: 2px solid var(--accent); outline-offset: 2px; }
+.time-input { border: 0; background: var(--bg); border-radius: 9px; padding: 7px 10px; font: inherit; color: var(--fg); font-variant-numeric: tabular-nums; }
 
 /* listes groupées */
 .group-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; padding: 6px 4px 0; margin-bottom: -6px; display: flex; justify-content: space-between; gap: 8px; }
@@ -190,6 +210,8 @@ const I = {
   run: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4" r="2"/><path d="M6 21l3-6 3 2 1 4M9 15l1.5-5L14 8l3 3 3 1M10.5 10L7 11l-2 3"/></svg>',
   dumbbell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 10v4M6 7v10M18 7v10M21 10v4M6 12h12"/></svg>',
   bike: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-7h5l3 7M10 9l2 7h-6M13 6h3"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M8 12.5l2.7 2.7L16.2 9.5"/></svg>',
+  weight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 4h12l2 16H4z"/><path d="M9.5 9a3 3 0 0 1 5 0M12 9l1-1.6"/></svg>',
   ball: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 4.5h-5L8 10z"/></svg>',
 };
 
@@ -250,14 +272,16 @@ let entries = [];
     makeEntry(t, "lunch", "Riz blanc cuit", 250), makeEntry(t, "lunch", "Blanc de poulet cuit", 160), makeEntry(t, "lunch", "Huile d'olive", 10), makeEntry(t, "lunch", "Haricots verts cuits", 150),
     makeEntry(t, "snack", "Skyr / fromage blanc 0 %", 150), makeEntry(t, "snack", "Amandes", 30),
   );
-  // jours passés : apports pour obtenir des balances réalistes (jours 9 et 4 non saisis)
-  const pastIntake = [3020, 2890, null, 2700, 3110, 2950, 2560, 3210, 2980, null, 2870, 3150, 2940];
-  const pastActive = [610, 720, 540, 880, 650, 590, 510, 940, 700, 620, 660, 760, 690];
-  const pastBasal  = [1755, 1762, 1758, 1770, 1748, 1761, 1752, 1773, 1766, 1759, 1750, 1768, 1760];
-  window.HISTORY = [];
-  for (let i = 13; i >= 1; i--) {
-    const idx = 13 - i, day = t - i * DAY;
-    window.HISTORY.push({ day, intake: pastIntake[idx], active: pastActive[idx], basal: pastBasal[idx] });
+  // 27 jours passés générés de façon déterministe : 2 jours non saisis, pesées un jour sur deux
+  const rnd = (i, k) => { const x = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
+  window.HISTORY = []; window.COMPLETED = new Set(); window.WEIGHTS = [];
+  for (let i = 27; i >= 1; i--) {
+    const day = t - i * DAY;
+    const skipped = i === 9 || i === 20;
+    const intake = skipped ? null : Math.round(2950 + (rnd(i, 1) - .5) * 520);
+    window.HISTORY.push({ day, intake, active: Math.round(800 + (rnd(i, 2) - .5) * 360), basal: Math.round(1760 + (rnd(i, 3) - .5) * 30) });
+    if (intake) window.COMPLETED.add(day);
+    if (i % 2 === 0 || i === 1) window.WEIGHTS.push({ day: day + 7.5 * 3600000, kg: 71.65 + (27 - i) * 0.03 + (rnd(i, 4) - .5) * 0.9 });
   }
 })();
 
@@ -296,17 +320,65 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 
 // ---------- Calculs (mêmes règles que EnergyAnalysis.swift) ----------
 function intakeOn(ts) { return entries.filter(e => e.day === ts).reduce((a, e) => ({ kcal: a.kcal + e.kcal, p: a.p + e.p, c: a.c + e.c, f: a.f + e.f }), { kcal: 0, p: 0, c: 0, f: 0 }); }
+const mean = xs => xs.reduce((a, b) => a + b, 0) / xs.length;
+const median = xs => { if (xs.length < 3) return null; const v = [...xs].sort((a, b) => a - b); return v[Math.floor(v.length / 2)]; };
+function slopePerDay(pts) {
+  if (pts.length < 2) return null;
+  const x0 = Math.min(...pts.map(p => p.day)), xs = pts.map(p => (p.day - x0) / DAY), ys = pts.map(p => p.kg);
+  const mx = mean(xs), my = mean(ys);
+  let num = 0, den = 0; xs.forEach((x, i) => { num += (x - mx) * (ys[i] - my); den += (x - mx) ** 2; });
+  return den > 0 ? num / den : null;
+}
+// Moyenne par jour puis moyenne glissante sur 7 jours (comme WeightTrend.swift)
+function smoothed(pts) {
+  const byDay = new Map();
+  pts.forEach(p => { const k = dayKey(p.day); byDay.set(k, [...(byDay.get(k) || []), p.kg]); });
+  const daily = [...byDay.entries()].map(([day, v]) => ({ day, raw: mean(v) })).sort((a, b) => a.day - b.day);
+  return daily.map(d => ({ ...d, trend: mean(daily.filter(x => x.day > d.day - 7 * DAY && x.day <= d.day).map(x => x.raw)) }));
+}
 function analysis() {
-  const hist = window.HISTORY.filter(h => h.intake).map(h => {
-    const exp = h.basal + h.active + 0.1 * h.intake;
-    return { day: h.day, balance: h.intake - exp };
-  });
-  const last7 = hist.filter(h => h.day >= today0.getTime() - 7 * DAY);
-  const avg = last7.length >= 3 ? last7.reduce((a, h) => a + h.balance, 0) / last7.length : null;
+  const t0 = today0.getTime();
+  const done = h => h.intake && window.COMPLETED.has(h.day);
+  // Calibration : apports moyens − pente du poids × 7 700, sur 28 jours
+  const win = window.HISTORY.filter(h => h.day >= t0 - 28 * DAY && done(h));
+  const wts = window.WEIGHTS.filter(w => w.day >= t0 - 28 * DAY && w.day < t0);
+  const span = wts.length ? (Math.max(...wts.map(w => w.day)) - Math.min(...wts.map(w => w.day))) / DAY : 0;
+  let cal = null;
+  if (win.length >= 14 && wts.length >= 4 && span >= 14) {
+    const tdee = mean(win.map(h => h.intake)) - slopePerDay(wts) * 7700;
+    cal = { tdee, days: win.length, weighIns: wts.length, watch: mean(win.map(h => h.basal + h.active + 0.1 * h.intake)) };
+  }
+  const hist = window.HISTORY.filter(h => h.day >= t0 - 14 * DAY && done(h))
+    .map(h => ({ day: h.day, balance: h.intake - (cal ? cal.tdee : h.basal + h.active + 0.1 * h.intake) }));
+  const last7 = hist.filter(h => h.day >= t0 - 7 * DAY);
+  const avg = last7.length >= 3 ? mean(last7.map(h => h.balance)) : null;
   const kgWeek = avg == null ? null : avg * 7 / 7700;
   let verdict = "none";
   if (avg != null) verdict = avg > 150 ? "gain" : avg < -150 ? "loss" : "stable";
-  return { hist, last7, avg, kgWeek, verdict, trend: 0.21 };
+  const trend = (slopePerDay(window.WEIGHTS.filter(w => w.day >= t0 - 28 * DAY)) || 0) * 7;
+  const target = cal ? cal.tdee + PROFILE.surplus : (AVG_BASE + PROFILE.surplus) / 0.9;
+  const typical = median(window.HISTORY.filter(done).map(h => h.intake));
+  return { hist, last7, avg, kgWeek, verdict, trend, cal, target, typical, progress: { days: win.length, weighIns: wts.length } };
+}
+
+function weightChart(points) {
+  const W = 340, H = 150, padL = 34, padR = 8, padT = 10, padB = 20;
+  const xs = points.map(p => p.day), all = points.flatMap(p => [p.raw, p.trend]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const lo = Math.floor((Math.min(...all) - .2) * 2) / 2, hi = Math.ceil((Math.max(...all) + .2) * 2) / 2;
+  const X = d => padL + (d - x0) / Math.max(1, x1 - x0) * (W - padL - padR);
+  const Y = v => padT + (hi - v) / (hi - lo) * (H - padT - padB);
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Courbe de poids">`;
+  for (let v = lo; v <= hi + 1e-9; v += .5) {
+    s += `<line x1="${padL}" x2="${W - padR}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--sep)"/>`;
+    if (Math.abs(v * 2 - Math.round(v * 2)) < 1e-6 && (hi - lo <= 2 || Number.isInteger(v))) s += `<text x="${padL - 5}" y="${Y(v) + 3.5}" font-size="9.5" text-anchor="end" fill="var(--muted)">${num(v, 1)}</text>`;
+  }
+  points.forEach(p => { s += `<circle cx="${X(p.day)}" cy="${Y(p.raw)}" r="2.8" fill="var(--muted)" opacity=".45"/>`; });
+  s += `<polyline fill="none" stroke="var(--teal)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" points="${points.map(p => `${X(p.day).toFixed(1)},${Y(p.trend).toFixed(1)}`).join(" ")}"/>`;
+  const last = points[points.length - 1];
+  s += `<circle cx="${X(last.day)}" cy="${Y(last.trend)}" r="4.5" fill="var(--teal)" stroke="var(--surface)" stroke-width="2"/>`;
+  [points[0], points[Math.floor(points.length / 2)], last].forEach((p, i) => { s += `<text x="${X(p.day)}" y="${H - 5}" font-size="9.5" text-anchor="${["start", "middle", "end"][i]}" fill="var(--muted)">${new Date(p.day).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</text>`; });
+  return s + "</svg>";
 }
 
 // ---------- Graphiques SVG ----------
@@ -342,7 +414,7 @@ function barChart({ data, height = 150, color, zeroLine = false, target = null, 
 }
 
 // ---------- Écrans ----------
-const state = { tab: "today", logDay: today0.getTime() };
+const state = { tab: "today", logDay: today0.getTime(), remind: true, remindAt: "21:00" };
 
 function tile(v, u, c) { return `<div class="tile"><div class="v">${v}${u ? `<span>${u}</span>` : ""}</div><div class="c">${c}</div></div>`; }
 function macroBar(label, v, target, color) {
@@ -357,16 +429,16 @@ function ring(pct, color) {
 }
 
 function viewToday() {
-  const a = analysis(), t = intakeOn(today0.getTime()), remain = TARGET - t.kcal;
+  const a = analysis(), t = intakeOn(today0.getTime()), TGT = a.target, remain = TGT - t.kcal;
   const night = NIGHTS[NIGHTS.length - 1];
   const week = WORKOUTS.filter(w => w.d > -7).length;
   let verdictHtml = "";
   if (a.verdict === "gain") verdictHtml = `<span class="chip" style="color:var(--accent)">Prise de poids probable</span>
       <div class="projection">${signed(a.kgWeek, 2)}<span>kg / semaine</span></div>
-      <div class="small sub">Surplus moyen de <b style="color:var(--fg)">${signed(a.avg, 0)} kcal/jour</b> sur les ${a.last7.length} derniers jours saisis, soit environ ${signed(a.kgWeek * 4.3, 1)} kg par mois.</div>`;
+      <div class="small sub">Surplus moyen de <b style="color:var(--fg)">${signed(a.avg, 0)} kcal/jour</b> sur les ${a.last7.length} dernières journées validées, soit environ ${signed(a.kgWeek * 4.3, 1)} kg par mois.</div>`;
   else if (a.verdict === "stable") verdictHtml = `<span class="chip" style="color:var(--blue)">Poids stable</span><div class="small sub">Tu es proche de l'équilibre. Ajoute environ ${PROFILE.surplus} kcal/jour pour prendre du poids.</div>`;
   else if (a.verdict === "loss") verdictHtml = `<span class="chip" style="color:var(--red)">Perte de poids probable</span><div class="projection">${signed(a.kgWeek, 2)}<span>kg / semaine</span></div>`;
-  else verdictHtml = `<div class="small sub">Saisis tes repas au moins 3 journées complètes pour obtenir un verdict.</div>`;
+  else verdictHtml = `<div class="small sub">Valide au moins 3 journées complètes (onglet Repas › « Journée terminée ») pour obtenir un verdict.</div>`;
 
   const chartData = a.hist.map(h => ({ v: h.balance, label: dayNum(h.day) }));
   return `${header("Aujourd'hui")}
@@ -374,26 +446,32 @@ function viewToday() {
     <section class="card">
       ${cardTitle("flame", "Calories du jour", "var(--orange)")}
       <div class="hero">
-        <div class="ring">${ring(t.kcal / TARGET, "var(--orange)")}<div class="center"><b>${kcal(t.kcal)}</b><span>sur ${kcal(TARGET)}</span></div></div>
+        <div class="ring">${ring(t.kcal / TGT, "var(--orange)")}<div class="center"><b>${kcal(t.kcal)}</b><span>sur ${kcal(TGT)}</span></div></div>
         <div class="stack" style="gap:12px">
           <div class="kv"><span class="k">${remain > 0 ? "Reste" : "Dépassé de"}</span><span class="v">${kcal(Math.abs(remain))} kcal</span></div>
           ${macroBar("Protéines", t.p, PROTEIN_TARGET, "var(--red)")}
           <div class="macro-head sub" style="white-space:nowrap;font-size:12.5px"><span>Glucides ${g(t.c)}</span><span>Lipides ${g(t.f)}</span></div>
         </div>
       </div>
-      <div class="caption">Objectif : dépense moyenne mesurée sur 7 jours + ${PROFILE.surplus} kcal de surplus.</div>
+      <div class="caption">${a.cal ? `Objectif : ta dépense réelle, calibrée sur ta balance (${a.cal.days} jours), + ${PROFILE.surplus} kcal de surplus.` : `Objectif : dépense moyenne mesurée sur 7 jours + ${PROFILE.surplus} kcal de surplus.`}</div>
     </section>
 
     <section class="card">
       ${cardTitle("scale", "Vais-je prendre du poids ?", "var(--accent)")}
       ${verdictHtml}
       ${barChart({ data: chartData, color: v => v >= 0 ? "var(--accent)" : "var(--red)", zeroLine: true, target: PROFILE.surplus })}
-      <div class="caption">Balance quotidienne (apports − dépense) des jours saisis. Pointillés : ton objectif de +${PROFILE.surplus} kcal.</div>
+      <div class="caption">Balance quotidienne (apports − dépense) des journées validées. Pointillés : ton objectif de +${PROFILE.surplus} kcal.</div>
+      <div class="divider"></div>
+      ${a.cal ? `<div class="calib"><div class="row">${I.check}<span>Dépense réelle : <b>${kcal(a.cal.tdee)} kcal/jour</b></span></div>
+        <div class="caption">Calculée sur ${a.cal.days} journées et ${a.cal.weighIns} pesées. La montre estimait ${kcal(a.cal.watch)} kcal (${signed(a.cal.watch - a.cal.tdee, 0)}) : l'objectif suit ta balance, pas la montre.</div></div>`
+      : `<div class="calib"><div class="macro-head"><b>Calibration sur ta balance</b><span class="sub">${Math.min(a.progress.days, 14)}/14 j</span></div><div class="progress"><i style="width:${Math.min(100, a.progress.days / 14 * 100)}%;background:var(--accent)"></i></div></div>`}
       <div class="compare">
         <div><div class="k">Prévision (repas)</div><div class="v">${signed(a.kgWeek ?? 0, 2)} kg/sem.</div></div>
         <div><div class="k">Balance réelle (Santé)</div><div class="v">${signed(a.trend, 2)} kg/sem.</div></div>
       </div>
     </section>
+
+    ${weightCard()}
 
     <div class="row2">
       <section class="card">
@@ -416,9 +494,27 @@ function viewToday() {
   </div>`;
 }
 
+function weightCard() {
+  const t0 = today0.getTime();
+  const pts = smoothed(window.WEIGHTS.filter(w => w.day >= t0 - 42 * DAY));
+  if (!pts.length) return "";
+  const last = pts[pts.length - 1];
+  const before = [...pts].reverse().find(p => p.day <= last.day - 7 * DAY);
+  const delta = before ? last.trend - before.trend : null;
+  return `<section class="card">
+      ${cardTitle("weight", "Poids", "var(--teal)")}
+      <div class="weight-head"><span class="val">${num(last.trend, 1)} kg</span>${delta != null ? `<span class="delta" style="color:${delta >= 0 ? "var(--accent)" : "var(--red)"}">${signed(delta, 1)} kg en 7 j</span>` : ""}</div>
+      <div class="caption" style="margin-top:-8px">Tendance lissée sur 7 jours · dernière pesée ${num(last.raw, 1)} kg</div>
+      ${weightChart(pts)}
+      <button class="secondary" data-act="addWeight">＋ Ajouter une pesée</button>
+    </section>`;
+}
+
 function viewFood() {
   const d = state.logDay, isToday = d === today0.getTime();
   const tot = intakeOn(d);
+  const past = window.HISTORY.find(h => h.day === d);
+  if (!entries.some(e => e.day === d) && past && past.intake) tot.kcal = past.intake;
   const dayLabel = isToday ? "Aujourd'hui" : new Date(d).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
   let html = `${header("Repas")}<div class="stack">
     <div class="list">
@@ -434,6 +530,15 @@ function viewFood() {
       html += `<div class="item"><div class="grow"><div class="name">${esc(e.name)}</div><div class="meta">${e.grams ? Math.round(e.qty) + " g" : num(e.qty) + " portion(s)"} · P ${Math.round(e.p)} · G ${Math.round(e.c)} · L ${Math.round(e.f)}</div></div><span class="end">${kcal(e.kcal)} kcal</span><button class="del" data-del="${e.id}" aria-label="Supprimer ${esc(e.name)}">✕</button></div>`;
     }
     html += `<button class="item action" data-add="${m.id}">${I.plus}<span>Ajouter un aliment</span></button></div>`;
+  }
+  const isDone = window.COMPLETED.has(d), typical = analysis().typical;
+  if (isDone) {
+    html += `<div class="list"><div class="item"><span class="grow done-row">${I.check.replace('<svg ', '<svg width="20" height="20" ')}Journée validée</span><button class="link" data-act="reopen">Rouvrir</button></div></div>
+      <p class="note">Cette journée compte dans le verdict et la calibration.</p>`;
+  } else {
+    if (typical && tot.kcal < typical * 0.6) html += `<div class="warn">Seulement ${kcal(tot.kcal)} kcal, contre ${kcal(typical)} d'habitude : il manque peut-être un repas.</div>`;
+    html += `<button class="primary" data-act="complete" ${tot.kcal > 0 ? "" : "disabled"}>Journée terminée</button>
+      <p class="note">Valide la journée une fois tous tes repas saisis : seules les journées complètes comptent dans le verdict.</p>`;
   }
   return html + `</div>`;
 }
@@ -476,7 +581,7 @@ function viewSport() {
       <div class="caption">Énergie active sur 14 jours. Chaque séance augmente ta dépense : pense à manger plus les jours d'entraînement.</div>
     </section>
     <div class="group-label">Séances (30 jours)</div>
-    <div class="list">${WORKOUTS.map(w => `<div class="item"><div class="icon-circle" style="color:var(--accent);background:var(--fill)">${I[w.icon]}</div><div class="grow"><div class="name">${w.name}</div><div class="meta">${dateLabel(w)}</div></div><div style="text-align:right"><div class="end">${dur(w.min / 60)}</div><div class="meta">${w.km ? num(w.km, 2) + " km · " : ""}${kcal(w.kcal)} kcal</div></div></div>`).join("")}</div>
+    <div class="list">${WORKOUTS.map(w => `<div class="item"><div class="icon-circle" style="color:var(--accent)">${I[w.icon]}</div><div class="grow"><div class="name">${w.name}</div><div class="meta">${dateLabel(w)}</div></div><div style="text-align:right"><div class="end">${dur(w.min / 60)}</div><div class="meta">${w.km ? num(w.km, 2) + " km · " : ""}${kcal(w.kcal)} kcal</div></div></div>`).join("")}</div>
   </div>`;
 }
 
@@ -488,10 +593,16 @@ function viewProfile() {
     <div class="group-label">Objectif prise de poids</div>
     <div class="list">${row("Surplus visé", "+" + PROFILE.surplus + " kcal/j")}${row("Protéines", num(PROFILE.proteinPerKg) + " g/kg")}${row("Objectif protéines", g(PROTEIN_TARGET))}</div>
     <p class="note">Repères courants : +250 à +500 kcal/jour (≈ +0,25 à +0,5 kg/semaine) et 1,6 à 2,2 g de protéines par kg pour une prise de masse surtout musculaire, avec de la musculation.</p>
+    <div class="group-label">Rappel</div>
+    <div class="list">
+      <div class="item"><label class="grow" for="remind">Rappel du soir</label><span class="switch"><input id="remind" type="checkbox" ${state.remind ? "checked" : ""}><i></i></span></div>
+      ${state.remind ? `<div class="item"><label class="grow" for="remindAt">Heure</label><input class="time-input" id="remindAt" type="time" value="${state.remindAt}"></div>` : ""}
+    </div>
+    <p class="note">Une notification si ta journée n'est pas encore validée. Rien n'est envoyé les jours déjà validés.</p>
     <div class="group-label">Si pas d'Apple Watch</div>
     <div class="list">${row("Niveau d'activité", "Actif (3-5 séances/sem.)")}${row("Métabolisme de base", kcal(BMR) + " kcal")}</div>
     <div class="group-label">Comment est calculé le verdict ?</div>
-    <div class="list"><div class="item small">Balance = calories mangées − (énergie au repos + énergie active + ~10 % des apports pour la digestion). Moyenne sur les 7 derniers jours saisis, puis ~7 700 kcal de surplus ≈ +1 kg. C'est une estimation : la courbe de ta balance reste la référence.</div></div>
+    <div class="list"><div class="item small">Balance = calories mangées − dépense, sur les 7 dernières journées validées. Au début, la dépense vient de Santé (énergie au repos + active + ~10 % pour la digestion). Après 14 journées validées et 4 pesées sur 2 semaines, elle est recalculée à partir de ta balance : apports moyens − variation de poids × 7 700 kcal/kg. C'est plus fiable que la montre.</div></div>
   </div>`;
 }
 
@@ -564,6 +675,16 @@ function renderSheet() {
       <p class="note">Dans l'app, la caméra lit le code-barres et récupère le produit sur Open Food Facts. Ici, la caméra n'est pas utilisée : simule un scan avec un vrai produit testé (Nutella 400 g, code 3017620422003).</p>
       <button class="primary" data-sheet="fakescan">Simuler le scan</button>
     </div>`;
+  } else if (sheet.view === "weight") {
+    nav = `<button class="l" data-sheet="close">Annuler</button><div class="t">Nouvelle pesée</div><span></span>`;
+    body = `<div class="wrap stack" style="padding-top:4px">
+      <div class="list">
+        <div class="item"><span class="grow">Poids</span><span class="field"><input id="wkg" type="number" inputmode="decimal" step="0.1" min="30" value="${sheet.amount.toFixed(1)}"><span class="sub">kg</span></span></div>
+        <div class="item"><span class="grow">Ajuster</span><span class="stepper"><button data-wstep="-1" aria-label="Moins 100 g">−</button><button data-wstep="1" aria-label="Plus 100 g">+</button></span></div>
+      </div>
+      <p class="note">Dans l'app, la pesée est enregistrée dans Santé. Idéalement le matin, à jeun.</p>
+      <button class="primary" data-sheet="saveweight">Enregistrer</button>
+    </div>`;
   } else if (sheet.view === "manual") {
     nav = `<button class="l" data-sheet="back">‹ Retour</button><div class="t">Saisie manuelle</div><span></span>`;
     const f = (id, l, u) => `<div class="item"><span class="grow">${l}</span><span class="field"><input id="${id}" type="number" inputmode="decimal" min="0" placeholder="0"><span class="sub">${u}</span></span></div>`;
@@ -596,12 +717,16 @@ function addEntry(name, qty, grams, m) {
 
 // ---------- Événements ----------
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-tab],[data-add],[data-del],[data-act],[data-sheet],[data-pick],[data-meal],[data-step]");
+  const b = e.target.closest("[data-tab],[data-add],[data-del],[data-act],[data-sheet],[data-pick],[data-meal],[data-step],[data-wstep]");
   if (!b) return;
   const d = b.dataset;
   if (d.tab) { state.tab = d.tab; render(); window.scrollTo(0, 0); }
   else if (d.add) openSheet(d.add);
   else if (d.del) { entries = entries.filter(x => x.id !== d.del); render(); toast("Supprimé"); }
+  else if (d.act === "complete") { window.COMPLETED.add(state.logDay); render(); toast("Journée validée"); }
+  else if (d.act === "reopen") { window.COMPLETED.delete(state.logDay); render(); toast("Journée rouverte"); }
+  else if (d.act === "addWeight") { const w = window.WEIGHTS[window.WEIGHTS.length - 1]; Object.assign(sheet, { open: true, view: "weight", amount: Math.round(w.kg * 10) / 10 }); renderSheet(); }
+  else if (d.wstep) { const inp = document.getElementById("wkg"); sheet.amount = Math.round(((parseFloat(inp.value) || sheet.amount) + 0.1 * +d.wstep) * 10) / 10; inp.value = sheet.amount.toFixed(1); }
   else if (d.act === "prevDay") { state.logDay -= DAY; render(); }
   else if (d.act === "nextDay" && state.logDay < today0.getTime()) { state.logDay += DAY; render(); }
   else if (d.meal) { sheet.meal = d.meal; renderSheet(); }
@@ -612,6 +737,11 @@ document.addEventListener("click", e => {
   else if (d.sheet === "scan" || d.sheet === "manual") { sheet.view = d.sheet; renderSheet(); }
   else if (d.sheet === "fakescan") { sheet.item = NUTELLA; sheet.amount = NUTELLA.def; sheet.view = "portion"; renderSheet(); toast("Produit trouvé"); }
   else if (d.sheet === "save") { const a = +sheet.amount; if (a > 0) addEntry(sheet.item.name, a, !sheet.item.isPortion, macrosFor(sheet.item, a)); }
+  else if (d.sheet === "saveweight") {
+    const kg = parseFloat(String(document.getElementById("wkg").value).replace(",", "."));
+    if (!(kg >= 30 && kg <= 250)) { toast("Indique un poids entre 30 et 250 kg"); return; }
+    window.WEIGHTS.push({ day: Date.now(), kg }); closeSheet(); render(); toast("Pesée enregistrée");
+  }
   else if (d.sheet === "savemanual") {
     const v = id => parseFloat((document.getElementById(id).value || "0").replace(",", ".")) || 0;
     const name = document.getElementById("mname").value.trim();
@@ -627,6 +757,10 @@ document.addEventListener("input", e => {
     sheet.amount = parseFloat(e.target.value) || 0;
     document.getElementById("portionMacros").innerHTML = portionRows(macrosFor(sheet.item, sheet.amount));
   }
+});
+document.addEventListener("change", e => {
+  if (e.target.id === "remind") { state.remind = e.target.checked; render(); toast(state.remind ? `Rappel activé à ${state.remindAt}` : "Rappel désactivé"); }
+  else if (e.target.id === "remindAt" && e.target.value) { state.remindAt = e.target.value; toast(`Rappel à ${state.remindAt}`); }
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && sheet.open) closeSheet(); });
 
