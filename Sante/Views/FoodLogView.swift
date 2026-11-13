@@ -9,6 +9,7 @@ struct FoodLogView: View {
     @State private var day = Calendar.current.startOfDay(for: Date())
     @State private var addingMeal: Meal?
     @State private var templateMeal: Meal?
+    @State private var editing: FoodEntry?
     @State private var templateName = ""
 
     private var dayEntries: [FoodEntry] {
@@ -93,7 +94,12 @@ struct FoodLogView: View {
                         let items = dayEntries.filter { $0.meal == meal }
                         Section {
                             ForEach(items) { entry in
-                                FoodRow(entry: entry)
+                                Button {
+                                    editing = entry
+                                } label: {
+                                    FoodRow(entry: entry)
+                                }
+                                .foregroundStyle(.primary)
                             }
                             .onDelete { offsets in
                                 for index in offsets { context.delete(items[index]) }
@@ -170,6 +176,10 @@ struct FoodLogView: View {
             .sheet(item: $addingMeal) { meal in
                 AddFoodView(day: day, meal: meal)
             }
+            .sheet(item: $editing) { entry in
+                EditEntryView(entry: entry)
+                    .presentationDetents([.medium, .large])
+            }
             .alert("Repas habituel", isPresented: Binding(
                 get: { templateMeal != nil },
                 set: { if !$0 { templateMeal = nil } }
@@ -221,5 +231,79 @@ private struct FoodRow: View {
             Spacer()
             Text("\(Fmt.kcal(entry.kcal)) kcal").monospacedDigit()
         }
+    }
+}
+
+/// Modifier la quantité ou le repas d'un aliment déjà saisi.
+private struct EditEntryView: View {
+    let entry: FoodEntry
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    @State private var quantity: Double
+    @State private var meal: Meal
+
+    init(entry: FoodEntry) {
+        self.entry = entry
+        _quantity = State(initialValue: entry.quantity)
+        _meal = State(initialValue: entry.meal)
+    }
+
+    /// Les apports suivent la quantité, proportionnellement.
+    private var scaled: Macros {
+        entry.quantity > 0 ? entry.macros * (quantity / entry.quantity) : entry.macros
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Group {
+                    Section(entry.name) {
+                        HStack {
+                            Text(entry.isGrams ? "Quantité" : "Portions")
+                            Spacer()
+                            TextField("0", value: $quantity, format: .number)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 90)
+                            Text(entry.isGrams ? "g" : "×").foregroundStyle(.secondary)
+                        }
+                        Stepper("Ajuster", value: $quantity, in: 0...5000, step: entry.isGrams ? 10 : 0.5)
+                        Picker("Repas", selection: $meal) {
+                            ForEach(Meal.allCases) { Text($0.label).tag($0) }
+                        }
+                    }
+                    Section("Apport") {
+                        MacroSummaryRows(macros: scaled)
+                    }
+                    Section {
+                        Button("Supprimer", role: .destructive) {
+                            context.delete(entry)
+                            dismiss()
+                        }
+                    }
+                }
+                .listRowBackground(Theme.surface)
+            }
+            .whiteListStyle()
+            .navigationTitle("Modifier")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Enregistrer") { save() }.disabled(quantity <= 0)
+                }
+            }
+        }
+    }
+
+    private func save() {
+        let m = scaled
+        entry.quantity = quantity
+        entry.kcal = m.kcal
+        entry.protein = m.protein
+        entry.carbs = m.carbs
+        entry.fat = m.fat
+        entry.mealRaw = meal.rawValue
+        dismiss()
     }
 }

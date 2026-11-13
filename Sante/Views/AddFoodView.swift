@@ -257,7 +257,7 @@ struct PortionView: View {
         let macros = item.macros(for: amount)
         Form {
             Group {
-                Section(item.name) {
+                Section {
                     HStack {
                         Text(item.isPortion ? "Portions" : "Quantité")
                         Spacer()
@@ -268,6 +268,10 @@ struct PortionView: View {
                         Text(item.isPortion ? "×" : "g").foregroundStyle(.secondary)
                     }
                     Stepper("Ajuster", value: $amount, in: 0...5000, step: item.isPortion ? 0.5 : 10)
+                } header: {
+                    Text(item.name)
+                } footer: {
+                    if let hint = item.cookingHint { Text(hint) }
                 }
                 Section("Apport") {
                     MacroSummaryRows(macros: macros)

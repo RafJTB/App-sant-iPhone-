@@ -1,9 +1,13 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ProfileView: View {
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var health: HealthDataStore
     @Environment(\.modelContext) private var context
+    @State private var backupURL: URL?
+    @State private var showImporter = false
+    @State private var backupMessage: String?
 
     private var weightUsed: Double { profile.effectiveWeight(healthWeight: health.latestWeightKg) }
 
@@ -73,6 +77,37 @@ struct ProfileView: View {
                     }
 
                     Section {
+                        if let backupURL {
+                            ShareLink(item: backupURL) {
+                                Label("Enregistrer le fichier de sauvegarde", systemImage: "square.and.arrow.up")
+                            }
+                        } else {
+                            Button {
+                                do {
+                                    backupURL = try Backup.export(context: context)
+                                    backupMessage = nil
+                                } catch {
+                                    backupMessage = "Export impossible : \(error.localizedDescription)"
+                                }
+                            } label: {
+                                Label("Préparer une sauvegarde", systemImage: "externaldrive")
+                            }
+                        }
+                        Button {
+                            showImporter = true
+                        } label: {
+                            Label("Restaurer une sauvegarde", systemImage: "arrow.down.doc")
+                        }
+                        if let backupMessage {
+                            Text(backupMessage).font(.footnote).foregroundStyle(.secondary)
+                        }
+                    } header: {
+                        Text("Sauvegarde")
+                    } footer: {
+                        Text("Tes repas ne sont stockés que sur cet iPhone. Enregistre de temps en temps une sauvegarde dans Fichiers ou iCloud Drive. La restauration ajoute les données sans créer de doublons. Les données Santé (poids, sommeil, sport) restent dans l'app Santé.")
+                    }
+
+                    Section {
                         Toggle("Rappel du soir", isOn: $profile.reminderEnabled)
                         if profile.reminderEnabled {
                             DatePicker("Heure", selection: $profile.reminderTime, displayedComponents: .hourAndMinute)
@@ -114,6 +149,14 @@ struct ProfileView: View {
             }
             .whiteListStyle()
             .navigationTitle("Profil")
+            .fileImporter(isPresented: $showImporter, allowedContentTypes: [.json]) { result in
+                do {
+                    let summary = try Backup.restore(from: result.get(), context: context)
+                    backupMessage = "Restauré : \(summary.text)."
+                } catch {
+                    backupMessage = "Restauration impossible : \(error.localizedDescription)"
+                }
+            }
         }
     }
 }

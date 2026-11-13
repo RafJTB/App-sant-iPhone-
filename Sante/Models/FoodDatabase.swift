@@ -32,6 +32,18 @@ struct FoodItem: Identifiable, Hashable {
     let isPortion: Bool
     let defaultAmount: Double
 
+    /// Rappel affiché à la saisie : le poids change beaucoup à la cuisson.
+    var cookingHint: String? {
+        let n = name.lowercased()
+        if n.contains("cuit") {
+            return "Quantité pesée après cuisson. Si tu pèses avant cuisson, choisis la version « cru » : l'écart de calories peut aller du simple au triple."
+        }
+        if n.contains("cru") {
+            return "Quantité pesée avant cuisson. Si tu pèses dans l'assiette, choisis la version « cuit »."
+        }
+        return nil
+    }
+
     func macros(for amount: Double) -> Macros {
         base * (isPortion ? amount : amount / 100)
     }
@@ -63,6 +75,14 @@ enum FoodDatabase {
         item("Céréales petit-déjeuner", 380, 8, 78, 3, portion: 40),
         item("Lentilles cuites", 115, 9, 17, 0.4, portion: 200),
         item("Pois chiches cuits", 140, 8, 19, 2.5, portion: 150),
+        // Versions crues (à utiliser si tu pèses avant cuisson)
+        item("Riz blanc cru", 350, 7, 78, 0.6, portion: 80),
+        item("Pâtes crues", 355, 12, 72, 1.5, portion: 100),
+        item("Semoule / couscous cru", 350, 12, 72, 1.5, portion: 80),
+        item("Quinoa cru", 365, 14, 62, 6, portion: 70),
+        item("Lentilles crues", 330, 25, 50, 1.5, portion: 80),
+        item("Blanc de poulet cru", 110, 23, 0, 1.5, portion: 180),
+        item("Steak haché 5 % cru", 125, 21, 0, 5, portion: 125),
         // Protéines
         item("Blanc de poulet cuit", 165, 31, 0, 3.6, portion: 150),
         item("Steak haché 5 % cuit", 155, 26, 0, 5.5, portion: 125),
