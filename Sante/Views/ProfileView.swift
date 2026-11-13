@@ -3,6 +3,7 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var health: HealthDataStore
+    @Environment(\.modelContext) private var context
 
     private var weightUsed: Double { profile.effectiveWeight(healthWeight: health.latestWeightKg) }
 
@@ -64,6 +65,26 @@ struct ProfileView: View {
                     }
     
                     Section {
+                        Toggle("Rappel du soir", isOn: $profile.reminderEnabled)
+                        if profile.reminderEnabled {
+                            DatePicker("Heure", selection: $profile.reminderTime, displayedComponents: .hourAndMinute)
+                        }
+                    } header: {
+                        Text("Rappel")
+                    } footer: {
+                        Text("Une notification si ta journée n'est pas encore validée. Rien n'est envoyé les jours déjà validés.")
+                    }
+                    .onChange(of: profile.reminderEnabled) { _, enabled in
+                        Task {
+                            if enabled { _ = await ReminderScheduler.requestPermission() }
+                            await ReminderScheduler.reschedule(profile: profile, context: context)
+                        }
+                    }
+                    .onChange(of: profile.reminderMinute + profile.reminderHour * 60) { _, _ in
+                        Task { await ReminderScheduler.reschedule(profile: profile, context: context) }
+                    }
+
+                    Section {
                         Button("Actualiser les données Santé") {
                             Task { await health.requestAuthorizationAndLoad() }
                         }
@@ -73,11 +94,11 @@ struct ProfileView: View {
                     } header: {
                         Text("Santé")
                     } footer: {
-                        Text("L'app lit uniquement tes données (sommeil, activité, séances, poids). Tes repas restent stockés sur ton iPhone. Pour modifier les autorisations : Réglages › Santé › Accès aux données et appareils › Santé.")
+                        Text("L'app lit tes données (sommeil, activité, séances, poids) et n'écrit que les pesées que tu saisis. Tes repas restent stockés sur ton iPhone. Pour modifier les autorisations : Réglages › Santé › Accès aux données et appareils › Santé.")
                     }
     
                     Section("Comment est calculé le verdict ?") {
-                        Text("Balance = calories mangées − (énergie au repos + énergie active + ~10 % des apports pour la digestion). On fait la moyenne sur les 7 derniers jours saisis, puis ~7 700 kcal de surplus ≈ +1 kg. C'est une estimation : la courbe de ta balance reste la référence.")
+                        Text("Balance = calories mangées − dépense, sur les 7 dernières journées validées. Au début, la dépense vient de Santé (énergie au repos + active + ~10 % pour la digestion). Après 14 journées validées et 4 pesées sur 2 semaines, elle est recalculée à partir de ta balance : apports moyens − variation de poids × 7 700 kcal/kg. C'est plus fiable que la montre.")
                             .font(.footnote)
                     }
                 }

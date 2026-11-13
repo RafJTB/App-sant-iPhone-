@@ -4,6 +4,7 @@ struct ContentView: View {
     @EnvironmentObject private var health: HealthDataStore
     @EnvironmentObject private var profile: ProfileStore
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.modelContext) private var context
 
     var body: some View {
         TabView {
@@ -24,10 +25,17 @@ struct ContentView: View {
             if !profile.didImportFromHealth {
                 profile.importFromHealth(health)
             }
+            if profile.reminderEnabled {
+                _ = await ReminderScheduler.requestPermission()
+            }
+            await ReminderScheduler.reschedule(profile: profile, context: context)
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                Task { await health.reload() }
+                Task {
+                    await health.reload()
+                    await ReminderScheduler.reschedule(profile: profile, context: context)
+                }
             }
         }
     }

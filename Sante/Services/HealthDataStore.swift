@@ -38,6 +38,11 @@ final class HealthDataStore: ObservableObject {
 
     static let historyDays = 30
 
+    /// Seule donnée écrite par l'app : les pesées saisies dans l'app.
+    private static var shareTypes: Set<HKSampleType> {
+        [HKQuantityType(.bodyMass)]
+    }
+
     private static var readTypes: Set<HKObjectType> {
         [
             HKCategoryType(.sleepAnalysis),
@@ -75,7 +80,7 @@ final class HealthDataStore: ObservableObject {
             return
         }
         do {
-            try await store.requestAuthorization(toShare: [], read: Self.readTypes)
+            try await store.requestAuthorization(toShare: Self.shareTypes, read: Self.readTypes)
         } catch {
             errorMessage = "Autorisation Santé impossible : \(error.localizedDescription)"
             return
@@ -131,6 +136,22 @@ final class HealthDataStore: ObservableObject {
             }
         }
         lastUpdate = Date()
+    }
+
+    // MARK: - Écriture
+
+    /// Enregistre une pesée dans l'app Santé, puis recharge les données.
+    func saveWeight(_ kg: Double, date: Date = Date()) async throws {
+        let type = HKQuantityType(.bodyMass)
+        guard store.authorizationStatus(for: type) == .sharingAuthorized else {
+            throw NSError(domain: "Sante", code: 1, userInfo: [NSLocalizedDescriptionKey:
+                "L'app n'a pas le droit d'enregistrer ton poids. Autorise-le dans Réglages › Santé › Accès aux données et appareils."])
+        }
+        let sample = HKQuantitySample(type: type,
+                                      quantity: HKQuantity(unit: .gramUnit(with: .kilo), doubleValue: kg),
+                                      start: date, end: date)
+        try await store.save(sample)
+        await reload()
     }
 
     // MARK: - Requêtes

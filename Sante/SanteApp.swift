@@ -13,6 +13,6 @@ struct SanteApp: App {
                 .environmentObject(profile)
                 .preferredColorScheme(.light)
         }
-        .modelContainer(for: FoodEntry.self)
+        .modelContainer(for: [FoodEntry.self, DayLog.self])
     }
 }

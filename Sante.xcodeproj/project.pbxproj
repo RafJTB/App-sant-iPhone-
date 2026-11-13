@@ -182,7 +182,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "La caméra sert à scanner le code-barres des aliments.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "L'app lit ton sommeil, ton activité, tes séances de sport et ton poids pour estimer si tu prends du poids.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "L'app n'écrit aucune donnée dans Santé.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "L'app enregistre dans Santé uniquement les pesées que tu saisis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
@@ -215,7 +215,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "La caméra sert à scanner le code-barres des aliments.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "L'app lit ton sommeil, ton activité, tes séances de sport et ton poids pour estimer si tu prends du poids.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "L'app n'écrit aucune donnée dans Santé.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "L'app enregistre dans Santé uniquement les pesées que tu saisis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
