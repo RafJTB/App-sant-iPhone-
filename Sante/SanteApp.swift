@@ -11,6 +11,7 @@ struct SanteApp: App {
             ContentView()
                 .environmentObject(health)
                 .environmentObject(profile)
+                .preferredColorScheme(.light)
         }
         .modelContainer(for: FoodEntry.self)
     }

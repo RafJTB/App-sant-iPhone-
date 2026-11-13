@@ -82,7 +82,7 @@ struct SleepView: View {
                 }
                 .padding()
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.background)
             .navigationTitle("Sommeil")
             .refreshable { await health.reload() }
         }

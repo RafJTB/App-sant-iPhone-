@@ -18,39 +18,43 @@ struct FoodLogView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    DaySelector(day: $day)
-                    HStack {
-                        StatTile(value: Fmt.kcal(totals.kcal), unit: "kcal", caption: "total")
-                        StatTile(value: "\(Int(totals.protein.rounded()))", unit: "g", caption: "protéines")
-                        StatTile(value: "\(Int(totals.carbs.rounded()))", unit: "g", caption: "glucides")
-                        StatTile(value: "\(Int(totals.fat.rounded()))", unit: "g", caption: "lipides")
-                    }
-                }
-
-                ForEach(Meal.allCases) { meal in
-                    let items = dayEntries.filter { $0.meal == meal }
+                Group {
                     Section {
-                        ForEach(items) { entry in
-                            FoodRow(entry: entry)
-                        }
-                        .onDelete { offsets in
-                            for index in offsets { context.delete(items[index]) }
-                        }
-                        Button {
-                            addingMeal = meal
-                        } label: {
-                            Label("Ajouter un aliment", systemImage: "plus.circle.fill")
-                        }
-                    } header: {
+                        DaySelector(day: $day)
                         HStack {
-                            Label(meal.label, systemImage: meal.symbol)
-                            Spacer()
-                            Text("\(Fmt.kcal(items.reduce(0) { $0 + $1.kcal })) kcal")
+                            StatTile(value: Fmt.kcal(totals.kcal), unit: "kcal", caption: "total")
+                            StatTile(value: "\(Int(totals.protein.rounded()))", unit: "g", caption: "protéines")
+                            StatTile(value: "\(Int(totals.carbs.rounded()))", unit: "g", caption: "glucides")
+                            StatTile(value: "\(Int(totals.fat.rounded()))", unit: "g", caption: "lipides")
+                        }
+                    }
+    
+                    ForEach(Meal.allCases) { meal in
+                        let items = dayEntries.filter { $0.meal == meal }
+                        Section {
+                            ForEach(items) { entry in
+                                FoodRow(entry: entry)
+                            }
+                            .onDelete { offsets in
+                                for index in offsets { context.delete(items[index]) }
+                            }
+                            Button {
+                                addingMeal = meal
+                            } label: {
+                                Label("Ajouter un aliment", systemImage: "plus.circle.fill")
+                            }
+                        } header: {
+                            HStack {
+                                Label(meal.label, systemImage: meal.symbol)
+                                Spacer()
+                                Text("\(Fmt.kcal(items.reduce(0) { $0 + $1.kcal })) kcal")
+                            }
                         }
                     }
                 }
+                .listRowBackground(Theme.surface)
             }
+            .whiteListStyle()
             .navigationTitle("Repas")
             .sheet(item: $addingMeal) { meal in
                 AddFoodView(day: day, meal: meal)

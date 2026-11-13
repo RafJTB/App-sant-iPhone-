@@ -38,52 +38,55 @@ struct AddFoodView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    Picker("Repas", selection: $meal) {
-                        ForEach(Meal.allCases) { Text($0.label).tag($0) }
+                Group {
+                    Section {
+                        Picker("Repas", selection: $meal) {
+                            ForEach(Meal.allCases) { Text($0.label).tag($0) }
+                        }
+                        Button {
+                            showScanner = true
+                        } label: {
+                            Label("Scanner un code-barres", systemImage: "barcode.viewfinder")
+                        }
+                        NavigationLink {
+                            ManualEntryView(onSave: save)
+                        } label: {
+                            Label("Saisie manuelle (étiquette, plat…)", systemImage: "square.and.pencil")
+                        }
                     }
-                    Button {
-                        showScanner = true
-                    } label: {
-                        Label("Scanner un code-barres", systemImage: "barcode.viewfinder")
+    
+                    if !search.trimmingCharacters(in: .whitespaces).isEmpty || !offResults.isEmpty || offLoading {
+                        openFoodFactsSection
                     }
-                    NavigationLink {
-                        ManualEntryView(onSave: save)
-                    } label: {
-                        Label("Saisie manuelle (étiquette, plat…)", systemImage: "square.and.pencil")
+    
+                    let filteredRecents = recents.filter(matches)
+                    if !filteredRecents.isEmpty {
+                        Section("Récents") {
+                            ForEach(filteredRecents) { item in
+                                NavigationLink {
+                                    PortionView(item: item, onSave: save)
+                                } label: {
+                                    FoodItemRow(item: item)
+                                }
+                            }
+                        }
                     }
-                }
-
-                if !search.trimmingCharacters(in: .whitespaces).isEmpty || !offResults.isEmpty || offLoading {
-                    openFoodFactsSection
-                }
-
-                let filteredRecents = recents.filter(matches)
-                if !filteredRecents.isEmpty {
-                    Section("Récents") {
-                        ForEach(filteredRecents) { item in
+    
+                    Section {
+                        ForEach(FoodDatabase.items.filter(matches)) { item in
                             NavigationLink {
                                 PortionView(item: item, onSave: save)
                             } label: {
                                 FoodItemRow(item: item)
                             }
                         }
+                    } header: {
+                        Text("Aliments courants")
+                    } footer: {
+                        Text("Valeurs moyennes approximatives. Pour un produit précis, utilise la saisie manuelle avec l'étiquette.")
                     }
                 }
-
-                Section {
-                    ForEach(FoodDatabase.items.filter(matches)) { item in
-                        NavigationLink {
-                            PortionView(item: item, onSave: save)
-                        } label: {
-                            FoodItemRow(item: item)
-                        }
-                    }
-                } header: {
-                    Text("Aliments courants")
-                } footer: {
-                    Text("Valeurs moyennes approximatives. Pour un produit précis, utilise la saisie manuelle avec l'étiquette.")
-                }
+                .listRowBackground(Theme.surface)
             }
             .searchable(text: $search, prompt: "Rechercher un aliment ou une marque")
             .onSubmit(of: .search) { searchOpenFoodFacts() }
@@ -93,6 +96,7 @@ struct AddFoodView: View {
             .navigationDestination(item: $scannedItem) { item in
                 PortionView(item: item, onSave: save)
             }
+            .whiteListStyle()
             .navigationTitle(meal.label)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -194,30 +198,34 @@ private struct PortionView: View {
     var body: some View {
         let macros = item.macros(for: amount)
         Form {
-            Section(item.name) {
-                HStack {
-                    Text(item.isPortion ? "Portions" : "Quantité")
-                    Spacer()
-                    TextField("0", value: $amount, format: .number)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 90)
-                    Text(item.isPortion ? "×" : "g").foregroundStyle(.secondary)
+            Group {
+                Section(item.name) {
+                    HStack {
+                        Text(item.isPortion ? "Portions" : "Quantité")
+                        Spacer()
+                        TextField("0", value: $amount, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 90)
+                        Text(item.isPortion ? "×" : "g").foregroundStyle(.secondary)
+                    }
+                    Stepper("Ajuster", value: $amount, in: 0...5000, step: item.isPortion ? 0.5 : 10)
                 }
-                Stepper("Ajuster", value: $amount, in: 0...5000, step: item.isPortion ? 0.5 : 10)
-            }
-            Section("Apport") {
-                MacroSummaryRows(macros: macros)
-            }
-            Section {
-                Button {
-                    onSave(item.name, amount, !item.isPortion, macros)
-                } label: {
-                    Text("Ajouter").frame(maxWidth: .infinity).bold()
+                Section("Apport") {
+                    MacroSummaryRows(macros: macros)
                 }
-                .disabled(amount <= 0)
+                Section {
+                    Button {
+                        onSave(item.name, amount, !item.isPortion, macros)
+                    } label: {
+                        Text("Ajouter").frame(maxWidth: .infinity).bold()
+                    }
+                    .disabled(amount <= 0)
+                }
             }
+            .listRowBackground(Theme.surface)
         }
+        .whiteListStyle()
         .navigationTitle("Portion")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -233,29 +241,33 @@ private struct ManualEntryView: View {
 
     var body: some View {
         Form {
-            Section("Aliment ou plat") {
-                TextField("Nom (ex. : Pâtes bolognaise maison)", text: $name)
-            }
-            Section {
-                numberField("Calories", value: $kcal, unit: "kcal")
-                numberField("Protéines", value: $protein, unit: "g")
-                numberField("Glucides", value: $carbs, unit: "g")
-                numberField("Lipides", value: $fat, unit: "g")
-            } header: {
-                Text("Pour la portion consommée")
-            } footer: {
-                Text("Seules les calories sont obligatoires. L'aliment sera ensuite proposé dans « Récents ».")
-            }
-            Section {
-                Button {
-                    let macros = Macros(kcal: kcal ?? 0, protein: protein ?? 0, carbs: carbs ?? 0, fat: fat ?? 0)
-                    onSave(name.trimmingCharacters(in: .whitespaces), 1, false, macros)
-                } label: {
-                    Text("Ajouter").frame(maxWidth: .infinity).bold()
+            Group {
+                Section("Aliment ou plat") {
+                    TextField("Nom (ex. : Pâtes bolognaise maison)", text: $name)
                 }
-                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || (kcal ?? 0) <= 0)
+                Section {
+                    numberField("Calories", value: $kcal, unit: "kcal")
+                    numberField("Protéines", value: $protein, unit: "g")
+                    numberField("Glucides", value: $carbs, unit: "g")
+                    numberField("Lipides", value: $fat, unit: "g")
+                } header: {
+                    Text("Pour la portion consommée")
+                } footer: {
+                    Text("Seules les calories sont obligatoires. L'aliment sera ensuite proposé dans « Récents ».")
+                }
+                Section {
+                    Button {
+                        let macros = Macros(kcal: kcal ?? 0, protein: protein ?? 0, carbs: carbs ?? 0, fat: fat ?? 0)
+                        onSave(name.trimmingCharacters(in: .whitespaces), 1, false, macros)
+                    } label: {
+                        Text("Ajouter").frame(maxWidth: .infinity).bold()
+                    }
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || (kcal ?? 0) <= 0)
+                }
             }
+            .listRowBackground(Theme.surface)
         }
+        .whiteListStyle()
         .navigationTitle("Saisie manuelle")
         .navigationBarTitleDisplayMode(.inline)
     }

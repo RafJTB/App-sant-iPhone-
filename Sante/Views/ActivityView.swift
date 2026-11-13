@@ -14,48 +14,52 @@ struct ActivityView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Aujourd'hui") {
-                    let today = health.today ?? DayHealth(date: Date())
-                    HStack {
-                        StatTile(value: Fmt.kcal(today.activeKcal), unit: "kcal", caption: "active")
-                        StatTile(value: Int(today.steps).formatted(), unit: "pas", caption: "marche")
-                        StatTile(value: "\(Int(today.exerciseMinutes))", unit: "min", caption: "exercice")
-                    }
-                }
-
-                Section("7 derniers jours") {
-                    HStack {
-                        StatTile(value: "\(weekWorkouts.count)", unit: "", caption: "séances")
-                        StatTile(value: Fmt.duration(weekWorkouts.map(\.duration).reduce(0, +)), unit: "", caption: "durée totale")
-                        StatTile(value: Fmt.kcal(weekWorkouts.compactMap(\.kcal).reduce(0, +)), unit: "kcal", caption: "séances")
-                    }
-                    if !last14.isEmpty {
-                        Chart(last14) { day in
-                            BarMark(x: .value("Jour", day.date, unit: .day),
-                                    y: .value("kcal", day.activeKcal))
-                                .foregroundStyle(.pink.gradient)
+                Group {
+                    Section("Aujourd'hui") {
+                        let today = health.today ?? DayHealth(date: Date())
+                        HStack {
+                            StatTile(value: Fmt.kcal(today.activeKcal), unit: "kcal", caption: "active")
+                            StatTile(value: Int(today.steps).formatted(), unit: "pas", caption: "marche")
+                            StatTile(value: "\(Int(today.exerciseMinutes))", unit: "min", caption: "exercice")
                         }
-                        .chartXAxis {
-                            AxisMarks(values: .stride(by: .day, count: 2)) { _ in
-                                AxisValueLabel(format: .dateTime.day())
+                    }
+    
+                    Section("7 derniers jours") {
+                        HStack {
+                            StatTile(value: "\(weekWorkouts.count)", unit: "", caption: "séances")
+                            StatTile(value: Fmt.duration(weekWorkouts.map(\.duration).reduce(0, +)), unit: "", caption: "durée totale")
+                            StatTile(value: Fmt.kcal(weekWorkouts.compactMap(\.kcal).reduce(0, +)), unit: "kcal", caption: "séances")
+                        }
+                        if !last14.isEmpty {
+                            Chart(last14) { day in
+                                BarMark(x: .value("Jour", day.date, unit: .day),
+                                        y: .value("kcal", day.activeKcal))
+                                    .foregroundStyle(.pink.gradient)
                             }
+                            .chartXAxis {
+                                AxisMarks(values: .stride(by: .day, count: 2)) { _ in
+                                    AxisValueLabel(format: .dateTime.day())
+                                }
+                            }
+                            .frame(height: 160)
+                            .padding(.vertical, 4)
+                            Text("Énergie active sur 14 jours. Chaque séance augmente ta dépense : pense à manger plus les jours d'entraînement.")
+                                .font(.caption).foregroundStyle(.secondary)
                         }
-                        .frame(height: 160)
-                        .padding(.vertical, 4)
-                        Text("Énergie active sur 14 jours. Chaque séance augmente ta dépense : pense à manger plus les jours d'entraînement.")
-                            .font(.caption).foregroundStyle(.secondary)
+                    }
+    
+                    Section("Séances (30 jours)") {
+                        if health.workouts.isEmpty {
+                            EmptyHealthHint(text: "Aucune séance enregistrée. Les entraînements de l'Apple Watch, de l'app Forme ou d'apps comme Strava apparaissent ici s'ils sont envoyés vers Santé.")
+                        }
+                        ForEach(health.workouts) { workout in
+                            WorkoutRow(workout: workout)
+                        }
                     }
                 }
-
-                Section("Séances (30 jours)") {
-                    if health.workouts.isEmpty {
-                        EmptyHealthHint(text: "Aucune séance enregistrée. Les entraînements de l'Apple Watch, de l'app Forme ou d'apps comme Strava apparaissent ici s'ils sont envoyés vers Santé.")
-                    }
-                    ForEach(health.workouts) { workout in
-                        WorkoutRow(workout: workout)
-                    }
-                }
+                .listRowBackground(Theme.surface)
             }
+            .whiteListStyle()
             .navigationTitle("Sport")
             .refreshable { await health.reload() }
         }

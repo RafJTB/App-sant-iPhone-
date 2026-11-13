@@ -35,6 +35,23 @@ enum Fmt {
     }
 }
 
+// MARK: - Thème (app en blanc)
+
+enum Theme {
+    static let background = Color.white
+    /// Fond des cartes et des lignes de liste : gris très clair légèrement vert.
+    static let surface = Color(red: 0.957, green: 0.966, blue: 0.961)
+    static let track = Color.black.opacity(0.07)
+}
+
+extension View {
+    /// Listes et formulaires sur fond blanc.
+    func whiteListStyle() -> some View {
+        self.scrollContentBackground(.hidden)
+            .background(Theme.background)
+    }
+}
+
 // MARK: - Composants
 
 struct Card<Content: View>: View {
@@ -45,14 +62,21 @@ struct Card<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label(title, systemImage: symbol)
-                .font(.headline)
-                .foregroundStyle(tint)
+            HStack(spacing: 8) {
+                Image(systemName: symbol)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(tint)
+                    .frame(width: 26, height: 26)
+                    .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+            }
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(18)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
 
@@ -93,7 +117,14 @@ struct MacroBar: View {
                 }
             }
             if let target, target > 0 {
-                ProgressView(value: min(value, target), total: target).tint(color)
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Theme.track)
+                        Capsule().fill(color)
+                            .frame(width: geo.size.width * min(value / target, 1))
+                    }
+                }
+                .frame(height: 6)
             }
         }
     }
@@ -116,6 +147,52 @@ struct EmptyHealthHint: View {
     var body: some View {
         Text(text)
             .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Anneau de progression (calories du jour).
+struct ProgressRing: View {
+    let progress: Double
+    let color: Color
+    var lineWidth: CGFloat = 12
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(Theme.track, lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: min(max(progress, 0), 1))
+                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+    }
+}
+
+/// Pastille de statut (verdict).
+struct StatusChip: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle().fill(color).frame(width: 7, height: 7)
+            Text(text)
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(color)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(color.opacity(0.12), in: Capsule())
+    }
+}
+
+/// Date au-dessus du grand titre.
+struct DateEyebrow: View {
+    var body: some View {
+        Text(Date().formatted(.dateTime.weekday(.wide).day().month(.wide)).uppercased())
+            .font(.caption.weight(.semibold))
+            .tracking(0.6)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
     }

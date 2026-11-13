@@ -12,7 +12,8 @@ struct DashboardView: View {
 
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: 14) {
+                    DateEyebrow()
                     if let message = health.errorMessage {
                         Card(title: "Santé", symbol: "exclamationmark.triangle.fill", tint: .orange) {
                             Text(message).font(.subheadline)
@@ -27,7 +28,7 @@ struct DashboardView: View {
                 }
                 .padding()
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.background)
             .navigationTitle("Aujourd'hui")
             .refreshable { await health.reload() }
         }
@@ -42,32 +43,37 @@ private struct TodayCaloriesCard: View {
     var body: some View {
         Card(title: "Calories du jour", symbol: "flame.fill", tint: .orange) {
             let intake = analysis.todayIntake
-            HStack(alignment: .firstTextBaseline) {
-                Text(Fmt.kcal(intake.kcal))
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                Text("/ \(Fmt.kcal(analysis.todayTarget)) kcal")
-                    .foregroundStyle(.secondary)
-            }
-            ProgressView(value: min(intake.kcal, analysis.todayTarget), total: max(analysis.todayTarget, 1))
-                .tint(.orange)
+            HStack(alignment: .center, spacing: 18) {
+                ZStack {
+                    ProgressRing(progress: intake.kcal / max(analysis.todayTarget, 1), color: .orange, lineWidth: 11)
+                    VStack(spacing: 0) {
+                        Text(Fmt.kcal(intake.kcal))
+                            .font(.system(size: 26, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                        Text("sur \(Fmt.kcal(analysis.todayTarget))")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+                .frame(width: 118, height: 118)
 
-            if analysis.remainingToday > 0 {
-                Text("Encore **\(Fmt.kcal(analysis.remainingToday)) kcal** pour atteindre ton objectif de prise de poids (+\(Fmt.kcal(analysis.targetSurplus)) kcal/jour).")
-                    .font(.subheadline)
-            } else {
-                Text("Objectif atteint ✅ (\(Fmt.kcal(-analysis.remainingToday)) kcal au-dessus).")
-                    .font(.subheadline)
+                VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(analysis.remainingToday > 0 ? "Reste" : "Dépassé de")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Text("\(Fmt.kcal(abs(analysis.remainingToday))) kcal")
+                            .font(.title3.weight(.semibold)).monospacedDigit()
+                    }
+                    MacroBar(label: "Protéines", value: intake.protein, target: analysis.proteinTarget, color: .red)
+                    HStack {
+                        Text("Glucides \(Fmt.grams(intake.carbs))")
+                        Spacer()
+                        Text("Lipides \(Fmt.grams(intake.fat))")
+                    }
+                    .font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                }
             }
 
-            VStack(spacing: 10) {
-                MacroBar(label: "Protéines", value: intake.protein, target: analysis.proteinTarget, color: .red)
-                MacroBar(label: "Glucides", value: intake.carbs, target: nil, color: .blue)
-                MacroBar(label: "Lipides", value: intake.fat, target: nil, color: .yellow)
-            }
-            .padding(.top, 4)
-
-            Text("Dépense \(analysis.todayTargetSource == .measured ? "moyenne mesurée sur 7 jours" : "estimée depuis ton profil").")
+            Text("Objectif : dépense \(analysis.todayTargetSource == .measured ? "moyenne mesurée sur 7 jours" : "estimée depuis ton profil") + \(Fmt.kcal(analysis.targetSurplus)) kcal de surplus.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -79,7 +85,7 @@ private struct VerdictCard: View {
     let analysis: EnergyAnalysis
 
     var body: some View {
-        Card(title: "Vais-je prendre du poids ?", symbol: "scalemass.fill", tint: .green) {
+        Card(title: "Vais-je prendre du poids ?", symbol: "scalemass.fill", tint: Color.accentColor) {
             verdictText
 
             if !analysis.history.isEmpty {
@@ -127,8 +133,10 @@ private struct VerdictCard: View {
             Text("Saisis tes repas au moins \(EnergyAnalysis.minDaysForVerdict) journées complètes pour obtenir un verdict (\(n)/\(EnergyAnalysis.minDaysForVerdict) sur les 7 derniers jours).")
                 .font(.subheadline)
         case .gaining(let kg):
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Oui 📈").font(.title2.bold()).foregroundStyle(.green)
+            VStack(alignment: .leading, spacing: 8) {
+                StatusChip(text: "Prise de poids probable", color: .green)
+                Text("\(Fmt.signed(kg, digits: 2)) kg / semaine")
+                    .font(.system(size: 30, weight: .bold, design: .rounded)).monospacedDigit()
                 Text("Surplus moyen de **\(Fmt.signed(analysis.averageBalance ?? 0, digits: 0)) kcal/jour** → environ **\(Fmt.signed(kg, digits: 2)) kg/semaine** (\(Fmt.signed(kg * 4.3, digits: 1)) kg/mois).")
                     .font(.subheadline)
                 if kg > 0.5 {
@@ -137,14 +145,16 @@ private struct VerdictCard: View {
                 }
             }
         case .maintaining:
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Plutôt non ➖").font(.title2.bold()).foregroundStyle(.blue)
+            VStack(alignment: .leading, spacing: 8) {
+                StatusChip(text: "Poids stable", color: .blue)
                 Text("Tu es proche de l'équilibre (\(Fmt.signed(analysis.averageBalance ?? 0, digits: 0)) kcal/jour) : ton poids devrait rester stable. Ajoute environ \(Fmt.kcal(analysis.targetSurplus)) kcal/jour pour prendre du poids.")
                     .font(.subheadline)
             }
         case .losing(let kg):
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Non 📉").font(.title2.bold()).foregroundStyle(.red)
+            VStack(alignment: .leading, spacing: 8) {
+                StatusChip(text: "Perte de poids probable", color: .red)
+                Text("\(Fmt.signed(kg, digits: 2)) kg / semaine")
+                    .font(.system(size: 30, weight: .bold, design: .rounded)).monospacedDigit()
                 Text("Déficit moyen de **\(Fmt.kcal(-(analysis.averageBalance ?? 0))) kcal/jour** → environ **\(Fmt.signed(kg, digits: 2)) kg/semaine**. Il te manque ~\(Fmt.kcal(analysis.targetSurplus - (analysis.averageBalance ?? 0))) kcal/jour pour atteindre ton objectif.")
                     .font(.subheadline)
             }
