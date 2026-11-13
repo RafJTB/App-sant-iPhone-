@@ -201,6 +201,9 @@ const I = {
   bars: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="16" y="9" width="4" height="11" rx="1"/></svg>',
   plus: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>',
   barcode: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V4h3M18 4h3v3M21 17v3h-3M6 20H3v-3M7 8v8M10 8v8M13 8v8M17 8v8"/></svg>',
+  pan: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10" cy="13" r="6.5"/><path d="M16 11.5l6-3"/></svg>',
+  star: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>',
+  redo: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 3.5v5h5"/></svg>',
   pencil: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',
   search: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>',
   sunrise: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 9a5 5 0 0 1 5 5H7a5 5 0 0 1 5-5zM3 16h18v2H3zM11 3h2v4h-2z"/></svg>',
@@ -272,6 +275,14 @@ let entries = [];
     makeEntry(t, "lunch", "Riz blanc cuit", 250), makeEntry(t, "lunch", "Blanc de poulet cuit", 160), makeEntry(t, "lunch", "Huile d'olive", 10), makeEntry(t, "lunch", "Haricots verts cuits", 150),
     makeEntry(t, "snack", "Skyr / fromage blanc 0 %", 150), makeEntry(t, "snack", "Amandes", 30),
   );
+  // Hier : repas détaillés (pour « Comme hier »)
+  const y = t - DAY;
+  entries.push(
+    makeEntry(y, "breakfast", "Flocons d'avoine", 80), makeEntry(y, "breakfast", "Lait demi-écrémé", 250), makeEntry(y, "breakfast", "Banane", 120),
+    makeEntry(y, "lunch", "Pâtes cuites", 300), makeEntry(y, "lunch", "Steak haché 5 % cuit", 125), makeEntry(y, "lunch", "Huile d'olive", 10), makeEntry(y, "lunch", "Tomate", 120),
+    makeEntry(y, "snack", "Skyr / fromage blanc 0 %", 150), makeEntry(y, "snack", "Whey protéine (poudre)", 30), makeEntry(y, "snack", "Dattes", 40),
+    makeEntry(y, "dinner", "Riz blanc cuit", 280), makeEntry(y, "dinner", "Saumon cuit", 140), makeEntry(y, "dinner", "Brocoli cuit", 150), makeEntry(y, "dinner", "Huile d'olive", 10), makeEntry(y, "dinner", "Pain complet", 60),
+  );
   // 27 jours passés générés de façon déterministe : 2 jours non saisis, pesées un jour sur deux
   const rnd = (i, k) => { const x = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
   window.HISTORY = []; window.COMPLETED = new Set(); window.WEIGHTS = [];
@@ -281,9 +292,22 @@ let entries = [];
     const intake = skipped ? null : Math.round(2950 + (rnd(i, 1) - .5) * 520);
     window.HISTORY.push({ day, intake, active: Math.round(800 + (rnd(i, 2) - .5) * 360), basal: Math.round(1760 + (rnd(i, 3) - .5) * 30) });
     if (intake) window.COMPLETED.add(day);
+    if (i === 1) window.HISTORY[window.HISTORY.length - 1].intake = Math.round(entries.filter(e => e.day === day).reduce((a, e) => a + e.kcal, 0));
     if (i % 2 === 0 || i === 1) window.WEIGHTS.push({ day: day + 7.5 * 3600000, kg: 71.65 + (27 - i) * 0.03 + (rnd(i, 4) - .5) * 0.9 });
   }
 })();
+
+// Repas habituels et recettes d'exemple
+const tplItem = (name, grams) => { const e = makeEntry(0, "", name, grams); return { name, qty: grams, grams: true, kcal: e.kcal, p: e.p, c: e.c, f: e.f }; };
+const TEMPLATES = [
+  { name: "Mon petit-déj", items: [tplItem("Flocons d'avoine", 80), tplItem("Lait demi-écrémé", 250), tplItem("Banane", 120)] },
+  { name: "Collation post-séance", items: [tplItem("Whey protéine (poudre)", 30), tplItem("Banane", 120), tplItem("Lait demi-écrémé", 250)] },
+];
+const RECIPES = [
+  { name: "Pâtes bolognaise maison", servings: 4, items: [tplItem("Pâtes cuites", 1000), tplItem("Steak haché 5 % cuit", 500), tplItem("Tomate", 400), tplItem("Huile d'olive", 15), tplItem("Emmental", 60)] },
+];
+const sumItems = items => items.reduce((a, x) => ({ kcal: a.kcal + x.kcal, p: a.p + x.p, c: a.c + x.c, f: a.f + x.f }), { kcal: 0, p: 0, c: 0, f: 0 });
+const recipeItem = (r, i) => { const t = sumItems(r.items), k = 1 / r.servings; return { id: "recipe-" + i, name: r.name, base: { kcal: t.kcal * k, p: t.p * k, c: t.c * k, f: t.f * k }, isPortion: true, def: 1 }; };
 
 const TODAY_HEALTH = { active: 412, steps: 8340, exercise: 38 };
 
@@ -529,7 +553,14 @@ function viewFood() {
     for (const e of items) {
       html += `<div class="item"><div class="grow"><div class="name">${esc(e.name)}</div><div class="meta">${e.grams ? Math.round(e.qty) + " g" : num(e.qty) + " portion(s)"} · P ${Math.round(e.p)} · G ${Math.round(e.c)} · L ${Math.round(e.f)}</div></div><span class="end">${kcal(e.kcal)} kcal</span><button class="del" data-del="${e.id}" aria-label="Supprimer ${esc(e.name)}">✕</button></div>`;
     }
-    html += `<button class="item action" data-add="${m.id}">${I.plus}<span>Ajouter un aliment</span></button></div>`;
+    html += `<button class="item action" data-add="${m.id}">${I.plus}<span>Ajouter un aliment</span></button>`;
+    if (!items.length) {
+      const prev = entries.filter(e => e.day === d - DAY && e.meal === m.id);
+      if (prev.length) html += `<button class="item action" data-copy="${m.id}">${I.redo}<span>Comme hier · ${kcal(prev.reduce((a, e) => a + e.kcal, 0))} kcal</span></button>`;
+    } else {
+      html += `<button class="item" style="color:var(--muted);font-weight:500" data-savetpl="${m.id}">${I.star}<span>Enregistrer comme repas habituel</span></button>`;
+    }
+    html += `</div>`;
   }
   const isDone = window.COMPLETED.has(d), typical = analysis().typical;
   if (isDone) {
@@ -593,6 +624,10 @@ function viewProfile() {
     <div class="group-label">Objectif prise de poids</div>
     <div class="list">${row("Surplus visé", "+" + PROFILE.surplus + " kcal/j")}${row("Protéines", num(PROFILE.proteinPerKg) + " g/kg")}${row("Objectif protéines", g(PROTEIN_TARGET))}</div>
     <p class="note">Repères courants : +250 à +500 kcal/jour (≈ +0,25 à +0,5 kg/semaine) et 1,6 à 2,2 g de protéines par kg pour une prise de masse surtout musculaire, avec de la musculation.</p>
+    <div class="group-label">Repas habituels et recettes</div>
+    <div class="list">${TEMPLATES.map(t => { const k = sumItems(t.items).kcal; return `<div class="item"><span class="grow"><span class="name">${esc(t.name)}</span><div class="meta">${t.items.length} aliments · ${kcal(k)} kcal</div></span>${I.star}</div>`; }).join("")}
+      ${RECIPES.map((r, i) => `<div class="item"><span class="grow"><span class="name">${esc(r.name)}</span><div class="meta">${r.servings} portions · ${kcal(recipeItem(r, i).base.kcal)} kcal par portion</div></span>${I.pan}</div>`).join("")}
+      <button class="item action" data-act="newRecipe">${I.plus}<span>Nouvelle recette</span></button></div>
     <div class="group-label">Rappel</div>
     <div class="list">
       <div class="item"><label class="grow" for="remind">Rappel du soir</label><span class="switch"><input id="remind" type="checkbox" ${state.remind ? "checked" : ""}><i></i></span></div>
@@ -641,15 +676,20 @@ function renderSheet() {
     const q = sheet.query.trim().toLowerCase();
     const match = it => !q || it.name.toLowerCase().includes(q);
     const rec = recents().filter(match), db = DB.filter(match);
-    pickPool = [...rec, ...db, NUTELLA];
+    const recipesItems = RECIPES.map(recipeItem).filter(match);
+    const tpls = TEMPLATES.map((t, i) => ({ ...t, i })).filter(t => !q || t.name.toLowerCase().includes(q));
+    pickPool = [...rec, ...db, ...recipesItems, NUTELLA];
     nav = `<button class="l" data-sheet="close">Annuler</button><div class="t">${mealLabel}</div><span></span>`;
     body = `<div class="wrap stack" style="padding-top:4px">
       <div class="search">${I.search}<input id="q" type="search" placeholder="Rechercher un aliment ou une marque" value="${esc(sheet.query)}" autocomplete="off"></div>
       <div class="seg" role="group" aria-label="Repas">${MEALS.map(m => `<button aria-pressed="${m.id === sheet.meal}" data-meal="${m.id}">${m.label.replace("Petit-déjeuner", "P.-déj.")}</button>`).join("")}</div>
       <div class="list">
-        <button class="item action" data-sheet="scan"><div class="icon-circle" style="background:var(--fill)">${I.barcode}</div><span class="grow">Scanner un code-barres</span><span class="chev">›</span></button>
-        <button class="item action" data-sheet="manual"><div class="icon-circle" style="background:var(--fill)">${I.pencil}</div><span class="grow">Saisie manuelle (étiquette, plat…)</span><span class="chev">›</span></button>
+        <button class="item action" data-sheet="scan"><div class="icon-circle">${I.barcode}</div><span class="grow">Scanner un code-barres</span><span class="chev">›</span></button>
+        <button class="item action" data-sheet="manual"><div class="icon-circle">${I.pencil}</div><span class="grow">Saisie manuelle (étiquette, plat…)</span><span class="chev">›</span></button>
+        <button class="item action" data-act="newRecipe"><div class="icon-circle">${I.pan}</div><span class="grow">Nouvelle recette maison</span><span class="chev">›</span></button>
       </div>
+      ${tpls.length ? `<div class="group-label">Mes repas habituels</div><div class="list">${tpls.map(t => { const k = sumItems(t.items).kcal; return `<button class="item" data-tpl="${t.i}"><div class="grow"><div class="name">${esc(t.name)}</div><div class="meta">${esc(t.items.map(x => x.name).join(", "))}</div></div><span class="end sub">${kcal(k)} kcal</span><span style="color:var(--accent)">${I.plus}</span></button>`; }).join("")}</div><p class="note">Un tap ajoute tous les aliments du repas.</p>` : ""}
+      ${recipesItems.length ? `<div class="group-label">Mes recettes</div><div class="list">${recipesItems.map(itemRow).join("")}</div>` : ""}
       ${q ? `<div class="group-label">Produits du commerce</div><div class="list"><div class="item small sub">Dans l'app, la recherche « ${esc(sheet.query)} » interroge Open Food Facts. Pas disponible dans cet aperçu web.</div></div>` : ""}
       ${rec.length ? `<div class="group-label">Récents</div><div class="list">${rec.map(itemRow).join("")}</div>` : ""}
       <div class="group-label">Aliments courants</div><div class="list">${db.length ? db.map(itemRow).join("") : `<div class="item sub small">Aucun aliment ne correspond.</div>`}</div>
@@ -685,6 +725,52 @@ function renderSheet() {
       <p class="note">Dans l'app, la pesée est enregistrée dans Santé. Idéalement le matin, à jeun.</p>
       <button class="primary" data-sheet="saveweight">Enregistrer</button>
     </div>`;
+  } else if (sheet.view === "tpl") {
+    nav = `<button class="l" data-sheet="close">Annuler</button><div class="t">Repas habituel</div><span></span>`;
+    const items = entries.filter(e => e.day === state.logDay && e.meal === sheet.meal);
+    body = `<div class="wrap stack" style="padding-top:4px">
+      <div class="list"><div class="item"><input id="tname" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--fg);outline:none" value="${esc(sheet.tplName)}" placeholder="Nom (ex. : Mon petit-déj)"></div></div>
+      <div class="group-label">${items.length} aliments · ${kcal(items.reduce((a, e) => a + e.kcal, 0))} kcal</div>
+      <div class="list">${items.map(e => `<div class="item"><span class="grow">${esc(e.name)}</span><span class="sub end">${e.grams ? Math.round(e.qty) + " g" : num(e.qty) + " ×"}</span></div>`).join("")}</div>
+      <p class="note">Tu pourras ajouter tout ce repas en un tap depuis « Ajouter un aliment ».</p>
+      <button class="primary" data-sheet="savetpl">Enregistrer</button>
+    </div>`;
+  } else if (sheet.view === "recipe") {
+    const r = sheet.recipe, tot = sumItems(r.items), per = r.servings ? tot.kcal / r.servings : 0;
+    nav = `<button class="l" data-sheet="${sheet.recipeFrom === "list" ? "back" : "close"}">${sheet.recipeFrom === "list" ? "‹ Retour" : "Annuler"}</button><div class="t">Nouvelle recette</div><span></span>`;
+    body = `<div class="wrap stack" style="padding-top:4px">
+      <div class="list">
+        <div class="item"><input id="rname" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--fg);outline:none" value="${esc(r.name)}" placeholder="Nom (ex. : Chili con carne maison)"></div>
+        <div class="item"><span class="grow">Nombre de portions</span><b class="tabular" style="min-width:24px;text-align:center">${r.servings}</b><span class="stepper"><button data-serv="-1" aria-label="Une portion de moins">−</button><button data-serv="1" aria-label="Une portion de plus">+</button></span></div>
+      </div>
+      <div class="group-label">Ingrédients (plat entier)</div>
+      <div class="list">${r.items.map((x, i) => `<div class="item"><div class="grow"><div class="name">${esc(x.name)}</div><div class="meta">${Math.round(x.qty)} g</div></div><span class="end sub">${kcal(x.kcal)} kcal</span><button class="del" data-ingdel="${i}" aria-label="Retirer ${esc(x.name)}">✕</button></div>`).join("")}
+        <button class="item action" data-sheet="ingpick">${I.plus}<span>Ajouter un ingrédient</span></button></div>
+      <p class="note">Indique les quantités pour tout le plat, par exemple 500 g de pâtes cuites et 400 g de steak haché.</p>
+      ${r.items.length ? `<div class="group-label">Par portion</div><div class="list">${portionRows({ kcal: per, p: tot.p / r.servings, c: tot.c / r.servings, f: tot.f / r.servings })}</div>` : ""}
+      <button class="primary" data-sheet="saverecipe" ${r.items.length ? "" : "disabled"}>Enregistrer la recette</button>
+    </div>`;
+  } else if (sheet.view === "ingpick") {
+    const q = (sheet.ingQuery || "").trim().toLowerCase();
+    const db = DB.filter(it => !q || it.name.toLowerCase().includes(q));
+    pickPool = db;
+    nav = `<button class="l" data-sheet="torecipe">‹ Recette</button><div class="t">Ingrédient</div><span></span>`;
+    body = `<div class="wrap stack" style="padding-top:4px">
+      <div class="search">${I.search}<input id="iq" type="search" placeholder="Rechercher un ingrédient" value="${esc(sheet.ingQuery || "")}" autocomplete="off"></div>
+      <div class="list">${db.length ? db.map(it => itemRow(it).replace("data-pick=", "data-ing=")).join("") : `<div class="item sub small">Aucun aliment ne correspond.</div>`}</div>
+    </div>`;
+  } else if (sheet.view === "ingportion") {
+    const it = sheet.item, m = macrosFor(it, sheet.amount || 0);
+    nav = `<button class="l" data-sheet="ingpick">‹ Retour</button><div class="t">Quantité</div><span></span>`;
+    body = `<div class="wrap stack" style="padding-top:4px">
+      <div class="group-label">${esc(it.name)}</div>
+      <div class="list">
+        <div class="item"><span class="grow">Quantité (plat entier)</span><span class="field"><input id="amt" type="number" inputmode="decimal" min="0" value="${sheet.amount}"><span class="sub">g</span></span></div>
+        <div class="item"><span class="grow">Ajuster</span><span class="stepper"><button data-step="-1" aria-label="Moins">−</button><button data-step="1" aria-label="Plus">+</button></span></div>
+      </div>
+      <div class="list" id="portionMacros">${portionRows(m)}</div>
+      <button class="primary" data-sheet="adding">Ajouter à la recette</button>
+    </div>`;
   } else if (sheet.view === "manual") {
     nav = `<button class="l" data-sheet="back">‹ Retour</button><div class="t">Saisie manuelle</div><span></span>`;
     const f = (id, l, u) => `<div class="item"><span class="grow">${l}</span><span class="field"><input id="${id}" type="number" inputmode="decimal" min="0" placeholder="0"><span class="sub">${u}</span></span></div>`;
@@ -717,7 +803,7 @@ function addEntry(name, qty, grams, m) {
 
 // ---------- Événements ----------
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-tab],[data-add],[data-del],[data-act],[data-sheet],[data-pick],[data-meal],[data-step],[data-wstep]");
+  const b = e.target.closest("[data-tab],[data-add],[data-del],[data-act],[data-sheet],[data-pick],[data-meal],[data-step],[data-wstep],[data-tpl],[data-copy],[data-savetpl],[data-serv],[data-ing],[data-ingdel]");
   if (!b) return;
   const d = b.dataset;
   if (d.tab) { state.tab = d.tab; render(); window.scrollTo(0, 0); }
@@ -727,12 +813,47 @@ document.addEventListener("click", e => {
   else if (d.act === "reopen") { window.COMPLETED.delete(state.logDay); render(); toast("Journée rouverte"); }
   else if (d.act === "addWeight") { const w = window.WEIGHTS[window.WEIGHTS.length - 1]; Object.assign(sheet, { open: true, view: "weight", amount: Math.round(w.kg * 10) / 10 }); renderSheet(); }
   else if (d.wstep) { const inp = document.getElementById("wkg"); sheet.amount = Math.round(((parseFloat(inp.value) || sheet.amount) + 0.1 * +d.wstep) * 10) / 10; inp.value = sheet.amount.toFixed(1); }
+  else if (d.tpl != null) {
+    const t = TEMPLATES[+d.tpl];
+    t.items.forEach(x => entries.push({ id: Math.random().toString(36).slice(2), day: state.logDay, meal: sheet.meal, name: x.name, qty: x.qty, grams: x.grams, kcal: x.kcal, p: x.p, c: x.c, f: x.f }));
+    closeSheet(); render(); toast(`${t.name} ajouté (${t.items.length} aliments)`);
+  }
+  else if (d.copy) {
+    const prev = entries.filter(x => x.day === state.logDay - DAY && x.meal === d.copy);
+    prev.forEach(x => entries.push({ ...x, id: Math.random().toString(36).slice(2), day: state.logDay }));
+    render(); toast(`${prev.length} aliments copiés d'hier`);
+  }
+  else if (d.savetpl) { Object.assign(sheet, { open: true, view: "tpl", meal: d.savetpl, tplName: MEALS.find(m => m.id === d.savetpl).label }); renderSheet(); }
+  else if (d.act === "newRecipe") { Object.assign(sheet, { open: true, view: "recipe", recipeFrom: sheet.open && sheet.view === "list" ? "list" : "page", recipe: { name: "", servings: 4, items: [] }, ingQuery: "" }); renderSheet(); }
+  else if (d.serv) { sheet.recipe.servings = Math.max(1, Math.min(20, sheet.recipe.servings + +d.serv)); renderSheet(); }
+  else if (d.ingdel != null) { sheet.recipe.items.splice(+d.ingdel, 1); renderSheet(); }
+  else if (d.ing) { const it = DB.find(x => x.id === d.ing); if (it) { sheet.item = it; sheet.amount = it.def * 2; sheet.view = "ingportion"; renderSheet(); } }
   else if (d.act === "prevDay") { state.logDay -= DAY; render(); }
   else if (d.act === "nextDay" && state.logDay < today0.getTime()) { state.logDay += DAY; render(); }
   else if (d.meal) { sheet.meal = d.meal; renderSheet(); }
   else if (d.pick) { const it = pickPool.find(x => x.id === d.pick); if (it) { sheet.item = it; sheet.amount = it.def; sheet.view = "portion"; renderSheet(); } }
   else if (d.step) { const st = sheet.item.isPortion ? 0.5 : 10; sheet.amount = Math.max(0, Math.round(((+sheet.amount || 0) + st * +d.step) * 10) / 10); renderSheet(); }
   else if (d.sheet === "close") closeSheet();
+  else if (d.sheet === "ingpick" || d.sheet === "torecipe") { sheet.view = d.sheet === "ingpick" ? "ingpick" : "recipe"; renderSheet(); }
+  else if (d.sheet === "adding") {
+    const a = +sheet.amount; if (!(a > 0)) return;
+    const m = macrosFor(sheet.item, a);
+    sheet.recipe.items.push({ name: sheet.item.name, qty: a, grams: true, kcal: m.kcal, p: m.p, c: m.c, f: m.f });
+    sheet.view = "recipe"; renderSheet(); toast(`${sheet.item.name} ajouté à la recette`);
+  }
+  else if (d.sheet === "saverecipe") {
+    const name = (sheet.recipe.name || "").trim();
+    if (!name) { toast("Donne un nom à ta recette"); return; }
+    RECIPES.push({ ...sheet.recipe, name });
+    if (sheet.recipeFrom === "list") { sheet.view = "list"; sheet.query = ""; renderSheet(); } else { closeSheet(); }
+    render(); toast("Recette enregistrée");
+  }
+  else if (d.sheet === "savetpl") {
+    const name = (document.getElementById("tname").value || "").trim();
+    if (!name) { toast("Donne un nom à ce repas"); return; }
+    const items = entries.filter(x => x.day === state.logDay && x.meal === sheet.meal).map(x => ({ name: x.name, qty: x.qty, grams: x.grams, kcal: x.kcal, p: x.p, c: x.c, f: x.f }));
+    TEMPLATES.unshift({ name, items }); closeSheet(); render(); toast("Repas habituel enregistré");
+  }
   else if (d.sheet === "back") { sheet.view = "list"; renderSheet(); }
   else if (d.sheet === "scan" || d.sheet === "manual") { sheet.view = d.sheet; renderSheet(); }
   else if (d.sheet === "fakescan") { sheet.item = NUTELLA; sheet.amount = NUTELLA.def; sheet.view = "portion"; renderSheet(); toast("Produit trouvé"); }
@@ -753,6 +874,11 @@ document.addEventListener("input", e => {
   if (e.target.id === "q") {
     sheet.query = e.target.value; const pos = e.target.selectionStart; renderSheet();
     const q = document.getElementById("q"); q.focus(); try { q.setSelectionRange(pos, pos); } catch (_) {}
+  } else if (e.target.id === "iq") {
+    sheet.ingQuery = e.target.value; const pos = e.target.selectionStart; renderSheet();
+    const q = document.getElementById("iq"); q.focus(); try { q.setSelectionRange(pos, pos); } catch (_) {}
+  } else if (e.target.id === "rname") {
+    sheet.recipe.name = e.target.value;
   } else if (e.target.id === "amt") {
     sheet.amount = parseFloat(e.target.value) || 0;
     document.getElementById("portionMacros").innerHTML = portionRows(macrosFor(sheet.item, sheet.amount));
