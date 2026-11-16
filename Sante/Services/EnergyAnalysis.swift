@@ -9,7 +9,6 @@ struct EnergyAnalysis {
     static let lowDayRatio = EnergyCore.lowDayRatio
 
     let weightKg: Double
-    let bmr: Double
     let todayIntake: Macros
     let proteinTarget: Double
     let targetSurplus: Double
@@ -19,9 +18,7 @@ struct EnergyAnalysis {
     init(entries: [FoodEntry], completedDays: Set<Date>, health: HealthDataStore, profile: ProfileStore, now: Date = Date()) {
         let cal = Calendar.current
         let weight = profile.effectiveWeight(healthWeight: health.latestWeightKg)
-        let bmr = profile.bmr(weightKg: weight)
         weightKg = weight
-        self.bmr = bmr
         proteinTarget = weight * profile.proteinPerKg
         targetSurplus = profile.targetSurplus
 
@@ -37,14 +34,12 @@ struct EnergyAnalysis {
             completedDays: completedDays,
             days: health.days,
             weights: health.weights,
-            bmr: bmr,
-            activityFactor: profile.activityFactor,
             surplus: profile.targetSurplus,
             now: now
         ))
     }
 
-    var todayTarget: Double { result.todayTarget }
+    var todayTarget: Double? { result.todayTarget }
     var todayTargetSource: ExpenditureSource { result.todayTargetSource }
     var history: [DayBalance] { result.history }
     var last7: [DayBalance] { result.last7 }
@@ -54,17 +49,19 @@ struct EnergyAnalysis {
     var weightTrendKgPerWeek: Double? { result.weightTrendKgPerWeek }
     var calibrated: CalibratedExpenditure? { result.calibrated }
     var calibrationProgress: CalibrationProgress { result.calibrationProgress }
-    var remainingToday: Double { todayTarget - todayIntake.kcal }
+    var remainingToday: Double? { todayTarget.map { $0 - todayIntake.kcal } }
+    var daysWithoutWatch: Int { result.daysWithoutWatch }
 
     var targetExplanation: String {
         switch todayTargetSource {
         case .calibrated:
             let days = calibrated?.daysUsed ?? 0
             return "Objectif : ta dépense réelle, calibrée sur ta balance (\(days) journées sur \(Self.calibrationWindow)), + \(Fmt.kcal(targetSurplus)) kcal de surplus."
-        case .measured, .partial:
-            return "Objectif : dépense moyenne mesurée sur 7 jours + \(Fmt.kcal(targetSurplus)) kcal de surplus. Il se calibrera sur ta balance après \(Self.minCalibrationDays) journées validées."
-        case .estimate:
-            return "Objectif : dépense estimée depuis ton profil + \(Fmt.kcal(targetSurplus)) kcal de surplus."
+        case .measured:
+            guard todayTarget != nil else {
+                return "Objectif en attente : il faut au moins 3 jours de mesures de ton Apple Watch sur la dernière semaine."
+            }
+            return "Objectif : dépense mesurée par ta montre (moyenne 7 jours) + \(Fmt.kcal(targetSurplus)) kcal de surplus. Il se calibrera sur ta balance après \(Self.minCalibrationDays) journées validées."
         }
     }
 }

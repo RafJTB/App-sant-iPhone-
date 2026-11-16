@@ -51,14 +51,15 @@ private struct TodayCaloriesCard: View {
     var body: some View {
         Card(title: "Calories du jour", symbol: "flame.fill", tint: .orange) {
             let intake = analysis.todayIntake
+            let target = analysis.todayTarget
             HStack(alignment: .center, spacing: 18) {
                 ZStack {
-                    ProgressRing(progress: intake.kcal / max(analysis.todayTarget, 1), color: .orange, lineWidth: 11)
+                    ProgressRing(progress: target.map { intake.kcal / max($0, 1) } ?? 0, color: .orange, lineWidth: 11)
                     VStack(spacing: 0) {
                         Text(Fmt.kcal(intake.kcal))
                             .font(.system(size: 26, weight: .bold, design: .rounded))
                             .monospacedDigit()
-                        Text("sur \(Fmt.kcal(analysis.todayTarget))")
+                        Text(target.map { "sur \(Fmt.kcal($0))" } ?? "en attente")
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                 }
@@ -66,9 +67,10 @@ private struct TodayCaloriesCard: View {
 
                 VStack(alignment: .leading, spacing: 10) {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(analysis.remainingToday > 0 ? "Reste" : "Dépassé de")
+                        let remaining = analysis.remainingToday ?? 0
+                        Text(analysis.remainingToday == nil ? "Objectif" : remaining > 0 ? "Reste" : "Dépassé de")
                             .font(.caption).foregroundStyle(.secondary)
-                        Text("\(Fmt.kcal(abs(analysis.remainingToday))) kcal")
+                        Text(analysis.remainingToday == nil ? "—" : "\(Fmt.kcal(abs(remaining))) kcal")
                             .font(.title3.weight(.semibold)).monospacedDigit()
                     }
                     MacroBar(label: "Protéines", value: intake.protein, target: analysis.proteinTarget, color: .red)
@@ -118,6 +120,12 @@ private struct VerdictCard: View {
             Divider()
 
             CalibrationRow(analysis: analysis)
+
+            if analysis.daysWithoutWatch > 0 {
+                Label("\(analysis.daysWithoutWatch) journée(s) validée(s) ignorée(s) : montre pas assez portée ces jours-là.",
+                      systemImage: "applewatch.slash")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
 
             if let trend = analysis.weightTrendKgPerWeek {
                 HStack {

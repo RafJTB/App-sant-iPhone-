@@ -247,8 +247,7 @@ const MEALS = [
   { id: "dinner", label: "Dîner", icon: "stars" },
 ];
 
-const PROFILE = { weight: 72.4, height: 180, age: 24, male: true, surplus: 300, proteinPerKg: 1.8, activity: 1.55 };
-const BMR = 10 * PROFILE.weight + 6.25 * PROFILE.height - 5 * PROFILE.age + 5;
+const PROFILE = { weight: 72.4, surplus: 300, proteinPerKg: 1.8 };
 const AVG_BASE = 1760 + 680; // repos + actif moyen mesuré (exemple Apple Watch)
 const TARGET = (AVG_BASE + PROFILE.surplus) / 0.9;
 const PROTEIN_TARGET = PROFILE.weight * PROFILE.proteinPerKg;
@@ -620,7 +619,7 @@ function viewProfile() {
   const row = (l, v) => `<div class="item"><span class="grow">${l}</span><span class="sub end">${v}</span></div>`;
   return `${header("Profil")}<div class="stack">
     <div class="group-label">Moi</div>
-    <div class="list">${row("Dernière pesée (Santé)", num(PROFILE.weight) + " kg")}${row("Taille", PROFILE.height + " cm")}${row("Âge", PROFILE.age + " ans")}${row("Sexe", "Homme")}<div class="item action">Importer depuis l'app Santé</div></div>
+    <div class="list">${row("Dernière pesée (Santé)", num(PROFILE.weight) + " kg")}<div class="item action">Reprendre la dernière pesée de Santé</div></div>
     <div class="group-label">Objectif prise de poids</div>
     <div class="list">${row("Surplus visé", "+" + PROFILE.surplus + " kcal/j")}${row("Protéines", num(PROFILE.proteinPerKg) + " g/kg")}${row("Objectif protéines", g(PROTEIN_TARGET))}</div>
     <p class="note">Repères courants : +250 à +500 kcal/jour (≈ +0,25 à +0,5 kg/semaine) et 1,6 à 2,2 g de protéines par kg pour une prise de masse surtout musculaire, avec de la musculation.</p>
@@ -637,10 +636,8 @@ function viewProfile() {
       ${state.remind ? `<div class="item"><label class="grow" for="remindAt">Heure</label><input class="time-input" id="remindAt" type="time" value="${state.remindAt}"></div>` : ""}
     </div>
     <p class="note">Une notification si ta journée n'est pas encore validée. Rien n'est envoyé les jours déjà validés.</p>
-    <div class="group-label">Si pas d'Apple Watch</div>
-    <div class="list">${row("Niveau d'activité", "Actif (3-5 séances/sem.)")}${row("Métabolisme de base", kcal(BMR) + " kcal")}</div>
     <div class="group-label">Comment est calculé le verdict ?</div>
-    <div class="list"><div class="item small">Balance = calories mangées − dépense, sur les 7 dernières journées validées. Au début, la dépense vient de Santé (énergie au repos + active + ~10 % pour la digestion). Après 20 journées validées sur 28 et 4 pesées sur 2 semaines, elle est recalculée à partir de ta balance : apports moyens − variation de poids × 7 700 kcal/kg. C'est plus fiable que la montre.</div></div>
+    <div class="list"><div class="item small">Balance = calories mangées − dépense, sur les 7 dernières journées validées. Au début, la dépense est celle mesurée par ton Apple Watch (énergie au repos + active + ~10 % pour la digestion) ; les jours où tu ne l'as pas portée sont ignorés. Après 20 journées validées sur 28 et 4 pesées sur 2 semaines, elle est recalculée à partir de ta balance : apports moyens − variation de poids × 7 700 kcal/kg. C'est plus fiable que la montre.</div></div>
   </div>`;
 }
 

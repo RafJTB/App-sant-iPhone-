@@ -1,15 +1,11 @@
 import Foundation
 
-/// D'où vient l'estimation de la dépense.
+/// D'où vient la dépense utilisée.
 enum ExpenditureSource {
     /// Calibrée sur la balance : apports réels − variation de poids réelle (la plus fiable).
     case calibrated
-    /// Métabolisme de repos + énergie active mesurés (Apple Watch).
+    /// Énergie au repos + énergie active mesurées par l'Apple Watch.
     case measured
-    /// Métabolisme calculé (formule) + énergie active mesurée (iPhone).
-    case partial
-    /// Formule × niveau d'activité, aucune donnée mesurée.
-    case estimate
 }
 
 struct DayBalance: Identifiable {
@@ -51,8 +47,8 @@ struct CalibrationProgress {
 ///
 /// Hypothèses (ce sont des estimations) :
 /// - ~7 700 kcal de surplus cumulé ≈ +1 kg.
-/// - Sans calibration : dépense = énergie de repos + active (Santé) + ~10 % des apports (digestion).
-/// - Seules les journées **validées** comptent.
+/// - Sans calibration : dépense = énergie au repos + active (Apple Watch) + ~10 % des apports (digestion).
+/// - Seules les journées **validées** comptent, et seulement si la montre a été portée.
 enum EnergyCore {
     static let kcalPerKg = 7700.0
     static let neutralZone = 150.0
@@ -64,6 +60,10 @@ enum EnergyCore {
     static let minWeighIns = 4
     static let minWeighInSpanDays = 14
     static let lowDayRatio = 0.6
+    /// Une journée dont l'énergie au repos est sous 70 % de l'habituelle = montre peu portée.
+    static let wornRatio = 0.7
+    /// Bornes de plausibilité de la dépense calibrée, en multiple de l'énergie au repos habituelle.
+    static let plausibleRange = 1.05...2.6
 
     struct Inputs {
         /// kcal par jour (clé : début de journée).
@@ -71,15 +71,14 @@ enum EnergyCore {
         var completedDays: Set<Date>
         var days: [DayHealth]
         var weights: [WeightPoint]
-        var bmr: Double
-        var activityFactor: Double
         var surplus: Double
         var now: Date
         var calendar: Calendar = .current
     }
 
     struct Result {
-        let todayTarget: Double
+        /// nil tant que la montre n'a pas fourni au moins 3 journées de mesures.
+        let todayTarget: Double?
         let todayTargetSource: ExpenditureSource
         /// Journées validées des 14 derniers jours.
         let history: [DayBalance]
@@ -91,6 +90,8 @@ enum EnergyCore {
         /// Apport médian d'une journée validée.
         let typicalIntake: Double?
         let isTodayComplete: Bool
+        /// Journées validées des 14 derniers jours écartées car la montre n'a pas été (assez) portée.
+        let daysWithoutWatch: Int
 
         var averageBalance: Double? {
             guard last7.count >= EnergyCore.minDaysForVerdict else { return nil }
@@ -116,6 +117,10 @@ enum EnergyCore {
         let today = cal.startOfDay(for: i.now)
         func dayBefore(_ n: Int) -> Date? { cal.date(byAdding: .day, value: -n, to: today) }
         func health(_ d: Date) -> DayHealth? { i.days.first { cal.isDate($0.date, inSameDayAs: d) } }
+        // Énergie au repos habituelle (médiane), pour repérer les jours où la montre n'a pas été portée
+        let basals = i.days.map(\.basalKcal).filter { $0 > 0 }.sorted()
+        let refBasal: Double? = basals.isEmpty ? nil : basals[basals.count / 2]
+        func watch(_ d: Date) -> Double? { baseExpenditure(day: health(d), referenceBasal: refBasal) }
         func completeIntake(_ d: Date) -> Double? {
             guard i.completedDays.contains(d), let kcal = i.intakeByDay[d], kcal > 0 else { return nil }
             return kcal
@@ -147,77 +152,68 @@ enum EnergyCore {
             let avgIntake = windowIntakes.map(\.1).reduce(0, +) / Double(windowIntakes.count)
             let tdee = avgIntake - slope * kcalPerKg
             // Garde-fou : résultat physiologiquement plausible uniquement
-            if tdee > i.bmr * 1.05 && tdee < i.bmr * 2.6 {
-                let watch: [Double] = windowIntakes.compactMap { d, intake in
-                    baseExpenditure(day: health(d), bmr: i.bmr).map { $0 + 0.1 * intake }
+            let plausible = refBasal.map { tdee > $0 * plausibleRange.lowerBound && tdee < $0 * plausibleRange.upperBound }
+                ?? (tdee > 1300 && tdee < 5000)
+            if plausible {
+                let watchValues: [Double] = windowIntakes.compactMap { d, intake in
+                    watch(d).map { $0 + 0.1 * intake }
                 }
                 calibrated = CalibratedExpenditure(
                     kcalPerDay: tdee,
                     daysUsed: windowIntakes.count,
                     weighIns: windowWeights.count,
-                    watchEstimate: watch.count >= 7 ? watch.reduce(0, +) / Double(watch.count) : nil
+                    watchEstimate: watchValues.count >= 7 ? watchValues.reduce(0, +) / Double(watchValues.count) : nil
                 )
             }
         }
 
         // --- Historique des balances (14 jours validés) ---
         var history: [DayBalance] = []
+        var withoutWatch = 0
         for offset in (1...14).reversed() {
             guard let d = dayBefore(offset), let intake = completeIntake(d) else { continue }
             if let c = calibrated {
                 history.append(DayBalance(date: d, intake: intake, expenditure: c.kcalPerDay, source: .calibrated))
+            } else if let base = watch(d) {
+                history.append(DayBalance(date: d, intake: intake, expenditure: base + 0.1 * intake, source: .measured))
             } else {
-                let (exp, src) = expenditure(day: health(d), bmr: i.bmr, activityFactor: i.activityFactor, intake: intake)
-                history.append(DayBalance(date: d, intake: intake, expenditure: exp, source: src))
+                withoutWatch += 1
             }
         }
         let limit7 = dayBefore(7) ?? today
         let last7 = history.filter { $0.date >= limit7 }
 
         // --- Objectif du jour ---
-        let target: Double
+        let target: Double?
         let source: ExpenditureSource
         if let c = calibrated {
             target = c.kcalPerDay + i.surplus
             source = .calibrated
         } else {
-            let bases = (1...7).compactMap(dayBefore).compactMap { baseExpenditure(day: health($0), bmr: i.bmr) }
+            let bases = (1...7).compactMap(dayBefore).compactMap(watch)
+            source = .measured
             if bases.count >= 3 {
                 let avg = bases.reduce(0, +) / Double(bases.count)
                 // A − (base + 10 % A) = surplus  →  A = (base + surplus) / 0,9
                 target = (avg + i.surplus) / 0.9
-                source = .measured
             } else {
-                target = i.bmr * i.activityFactor + i.surplus
-                source = .estimate
+                target = nil
             }
         }
 
         return Result(todayTarget: target, todayTargetSource: source, history: history, last7: last7,
                       weightTrendKgPerWeek: weightTrend(i.weights, now: i.now, calendar: cal),
                       calibrated: calibrated, calibrationProgress: progress,
-                      typicalIntake: typical, isTodayComplete: i.completedDays.contains(today))
+                      typicalIntake: typical, isTodayComplete: i.completedDays.contains(today),
+                      daysWithoutWatch: withoutWatch)
     }
 
-    /// Dépense sans le coût de digestion.
-    static func baseExpenditure(day: DayHealth?, bmr: Double) -> Double? {
-        guard let d = day else { return nil }
-        // Données de repos incomplètes (montre retirée) → formule.
-        if d.basalKcal >= 0.7 * bmr { return d.basalKcal + d.activeKcal }
-        if d.activeKcal > 50 { return bmr + d.activeKcal }
-        return nil
-    }
-
-    static func expenditure(day: DayHealth?, bmr: Double, activityFactor: Double, intake: Double) -> (Double, ExpenditureSource) {
-        let digestion = 0.1 * intake
-        if let d = day, d.basalKcal >= 0.7 * bmr {
-            return (d.basalKcal + d.activeKcal + digestion, .measured)
-        }
-        if let d = day, d.activeKcal > 50 {
-            return (bmr + d.activeKcal + digestion, .partial)
-        }
-        // Le facteur d'activité inclut déjà la digestion.
-        return (bmr * activityFactor, .estimate)
+    /// Dépense mesurée par la montre (repos + active), sans le coût de digestion.
+    /// nil si la montre n'a pas été assez portée ce jour-là (énergie au repos trop basse).
+    static func baseExpenditure(day: DayHealth?, referenceBasal: Double?) -> Double? {
+        guard let d = day, d.basalKcal > 0 else { return nil }
+        if let ref = referenceBasal, d.basalKcal < ref * wornRatio { return nil }
+        return d.basalKcal + d.activeKcal
     }
 
     /// Pente (kg/semaine) des pesées des 28 derniers jours.

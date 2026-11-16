@@ -10,14 +10,11 @@ App iOS native (SwiftUI) qui lit tes données de l'app **Santé** et te permet d
 | **Repas** | Journal par repas, navigation par jour, **scan de code-barres**, **recherche dans les produits du commerce (Open Food Facts)**, ~55 aliments courants, récents, saisie manuelle | Local (iPhone) + Open Food Facts |
 | **Sommeil** | Dernière nuit (coucher/réveil, phases profond/léger/paradoxal), 14 nuits, moyenne, régularité | Santé |
 | **Sport** | Énergie active, pas, minutes d'exercice, séances des 30 derniers jours (type, durée, kcal, distance) | Santé |
-| **Profil** | Poids/taille/âge/sexe (importés de Santé), surplus visé, protéines g/kg, niveau d'activité | Santé + toi |
+| **Profil** | Poids (Santé), surplus visé, protéines g/kg, rappel, sauvegarde, repas habituels et recettes | Santé + toi |
 
 ### Comment est calculé le verdict
 
-1. **Dépense du jour** :
-   - avec Apple Watch → énergie au repos + énergie active (mesurées) + ~10 % des apports (digestion) ;
-   - iPhone seul → métabolisme de base (Mifflin-St Jeor) + énergie active ;
-   - rien → métabolisme de base × niveau d'activité.
+1. **Dépense du jour** : énergie au repos + énergie active mesurées par l'Apple Watch + ~10 % des apports (digestion). Les jours où la montre n'a pas été assez portée sont ignorés.
 2. **Balance** = calories mangées − dépense, uniquement sur les jours **où tu as saisi des repas** (sinon un jour vide ferait croire à un énorme déficit).
 3. Moyenne sur les **7 derniers jours complets** (au moins 3 jours) → ~7 700 kcal ≈ 1 kg → **kg/semaine prévus**.
 4. Comparaison avec la **tendance réelle de ta balance** (pesées Santé, régression sur 4 semaines). Si la balance monte moins vite que prévu, c'est souvent que des repas manquent ou que les portions sont sous-estimées.

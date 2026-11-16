@@ -11,9 +11,6 @@ final class HealthDataStore: ObservableObject {
     @Published private(set) var workouts: [WorkoutSummary] = []
     @Published private(set) var weights: [WeightPoint] = []
     @Published private(set) var latestWeightKg: Double?
-    @Published private(set) var heightCm: Double?
-    @Published private(set) var birthYear: Int?
-    @Published private(set) var isMale: Bool?
     @Published private(set) var isLoading = false
     @Published private(set) var lastUpdate: Date?
     @Published var errorMessage: String?
@@ -38,10 +35,7 @@ final class HealthDataStore: ObservableObject {
             HKQuantityType(.distanceCycling),
             HKQuantityType(.distanceSwimming),
             HKQuantityType(.bodyMass),
-            HKQuantityType(.height),
             HKObjectType.workoutType(),
-            HKCharacteristicType(.dateOfBirth),
-            HKCharacteristicType(.biologicalSex),
         ]
     }
 
@@ -86,7 +80,6 @@ final class HealthDataStore: ObservableObject {
         async let sport = loadWorkouts(days: n)
         async let weightHistory = quantitySamples(.bodyMass, days: 90)
         async let lastWeight = latestQuantity(.bodyMass, unit: .gramUnit(with: .kilo))
-        async let lastHeight = latestQuantity(.height, unit: .meterUnit(with: .centi))
 
         let (a, b, s, e) = await (active, basal, steps, exercise)
         let cal = Calendar.current
@@ -107,18 +100,7 @@ final class HealthDataStore: ObservableObject {
             WeightPoint(date: $0.startDate, kg: $0.quantity.doubleValue(for: .gramUnit(with: .kilo)))
         }
         latestWeightKg = await lastWeight
-        heightCm = await lastHeight
 
-        if let comps = try? store.dateOfBirthComponents(), let year = comps.year {
-            birthYear = year
-        }
-        if let sex = try? store.biologicalSex().biologicalSex {
-            switch sex {
-            case .male: isMale = true
-            case .female: isMale = false
-            default: break
-            }
-        }
         lastUpdate = Date()
     }
 

@@ -24,17 +24,7 @@ struct ProfileView: View {
                                 LabeledContent("Poids", value: "\(Fmt.number(profile.weightKg)) kg")
                             }
                         }
-                        Stepper(value: $profile.heightCm, in: 120...230, step: 1) {
-                            LabeledContent("Taille", value: "\(Int(profile.heightCm)) cm")
-                        }
-                        Stepper(value: $profile.birthYear, in: 1930...2015) {
-                            LabeledContent("Année de naissance", value: String(profile.birthYear))
-                        }
-                        Picker("Sexe", selection: $profile.isMale) {
-                            Text("Homme").tag(true)
-                            Text("Femme").tag(false)
-                        }
-                        Button("Importer depuis l'app Santé") {
+                        Button("Reprendre la dernière pesée de Santé") {
                             profile.importFromHealth(health)
                         }
                     } header: {
@@ -53,19 +43,6 @@ struct ProfileView: View {
                         Text("Objectif prise de poids")
                     } footer: {
                         Text("Repères courants : +250 à +500 kcal/jour (≈ +0,25 à +0,5 kg/semaine) et 1,6 à 2,2 g de protéines par kg pour une prise de masse surtout musculaire, avec de la musculation.")
-                    }
-    
-                    Section {
-                        Picker("Niveau d'activité", selection: $profile.activityFactor) {
-                            ForEach(ProfileStore.activityLevels, id: \.factor) { level in
-                                Text(level.label).tag(level.factor)
-                            }
-                        }
-                        LabeledContent("Métabolisme de base", value: "\(Fmt.kcal(profile.bmr(weightKg: weightUsed))) kcal")
-                    } header: {
-                        Text("Si pas d'Apple Watch")
-                    } footer: {
-                        Text("Avec une Apple Watch, l'app utilise ta dépense réelle (énergie au repos + active). Sinon, elle l'estime avec la formule de Mifflin-St Jeor × ton niveau d'activité.")
                     }
     
                     Section {
@@ -137,11 +114,11 @@ struct ProfileView: View {
                     } header: {
                         Text("Santé")
                     } footer: {
-                        Text("L'app lit tes données (sommeil, activité, séances, poids) et n'écrit que les pesées que tu saisis. Tes repas restent stockés sur ton iPhone. Pour modifier les autorisations : Réglages › Santé › Accès aux données et appareils › Santé.")
+                        Text("L'app lit tes données (sommeil, activité, séances, poids) et n'écrit que les pesées que tu saisis. Tes repas restent stockés sur ton iPhone. Les calories brûlées viennent de ton Apple Watch : porte-la jour et nuit pour des mesures complètes. Pour modifier les autorisations : Réglages › Santé › Accès aux données et appareils › Santé.")
                     }
     
                     Section("Comment est calculé le verdict ?") {
-                        Text("Balance = calories mangées − dépense, sur les 7 dernières journées validées. Au début, la dépense vient de Santé (énergie au repos + active + ~10 % pour la digestion). Après 20 journées validées sur 28 et 4 pesées sur 2 semaines, elle est recalculée à partir de ta balance : apports moyens − variation de poids × 7 700 kcal/kg. C'est plus fiable que la montre.")
+                        Text("Balance = calories mangées − dépense, sur les 7 dernières journées validées. Au début, la dépense est celle mesurée par ton Apple Watch (énergie au repos + active + ~10 % pour la digestion) ; les jours où tu ne l'as pas portée sont ignorés. Après 20 journées validées sur 28 et 4 pesées sur 2 semaines, elle est recalculée à partir de ta balance : apports moyens − variation de poids × 7 700 kcal/kg. C'est plus fiable que la montre.")
                             .font(.footnote)
                     }
                 }

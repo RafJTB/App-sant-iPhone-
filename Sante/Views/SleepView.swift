@@ -37,7 +37,7 @@ struct SleepView: View {
                         LastNightCard(night: night)
                     } else {
                         Card(title: "Sommeil", symbol: "bed.double.fill", tint: .indigo) {
-                            EmptyHealthHint(text: "Aucune donnée de sommeil. Active « Sommeil » dans l'app Santé (iPhone) ou porte ton Apple Watch la nuit, puis vérifie l'autorisation dans Réglages › Santé › Accès aux données.")
+                            EmptyHealthHint(text: "Aucune donnée de sommeil. Porte ton Apple Watch la nuit avec le suivi du sommeil activé (app Watch › Sommeil), puis vérifie l'autorisation dans Réglages › Santé › Accès aux données.")
                         }
                     }
 
@@ -129,7 +129,7 @@ private struct LastNightCard: View {
                     StatTile(value: Fmt.duration(night.awake), unit: "", caption: "éveillé")
                 }
             } else {
-                Text("Phases de sommeil disponibles avec une Apple Watch.")
+                Text("Pas de phases cette nuit : ta montre n'a peut-être pas été portée.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }

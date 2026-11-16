@@ -11,10 +11,10 @@ let cal = Calendar.current
 let now = cal.date(from: DateComponents(year: 2026, month: 11, day: 13, hour: 12))!
 let today = cal.startOfDay(for: now)
 func day(_ n: Int) -> Date { cal.date(byAdding: .day, value: -n, to: today)! }
-let bmr = 1750.0
 
 func inputs(intake: (Int) -> Double?, completed: (Int) -> Bool = { _ in true },
-            weight: ((Int) -> Double?)? = nil, watch: Bool = false) -> EnergyCore.Inputs {
+            weight: ((Int) -> Double?)? = nil, watch: Bool = false,
+            notWorn: (Int) -> Bool = { _ in false }) -> EnergyCore.Inputs {
     var byDay: [Date: Double] = [:]
     var done = Set<Date>()
     var weights: [WeightPoint] = []
@@ -23,10 +23,10 @@ func inputs(intake: (Int) -> Double?, completed: (Int) -> Bool = { _ in true },
         if let k = intake(n) { byDay[day(n)] = k }
         if completed(n) { done.insert(day(n)) }
         if let w = weight?(n) { weights.append(WeightPoint(date: day(n).addingTimeInterval(7.5 * 3600), kg: w)) }
-        if watch { health.append(DayHealth(date: day(n), activeKcal: 700, basalKcal: 1750)) }
+        if watch { health.append(DayHealth(date: day(n), activeKcal: notWorn(n) ? 80 : 700, basalKcal: notWorn(n) ? 600 : 1750)) }
     }
     return .init(intakeByDay: byDay, completedDays: done, days: health, weights: weights,
-                 bmr: bmr, activityFactor: 1.55, surplus: 300, now: now, calendar: cal)
+                 surplus: 300, now: now, calendar: cal)
 }
 
 // 1. Poids stable + 3 000 kcal/jour → dépense réelle 3 000
@@ -78,11 +78,13 @@ do {
     check("2 journées : pas de verdict", r.verdict == .notEnoughData(daysLogged: 2))
 }
 
-// 8. Aucune donnée Santé → formule × activité
+// 8. Montre non portée certains jours → jours ignorés, pas remplacés par une formule
 do {
-    let r = EnergyCore.compute(inputs(intake: { _ in 3000 }, completed: { $0 <= 5 }))
-    check("Sans Santé : objectif = BMR × 1,55 + 300", near(r.todayTarget, bmr * 1.55 + 300) && r.todayTargetSource == .estimate)
-    check("Sans Santé : balance = 3000 − BMR × 1,55", near(r.averageBalance, 3000 - bmr * 1.55))
+    let r = EnergyCore.compute(inputs(intake: { _ in 3000 }, completed: { $0 <= 7 }, watch: true, notWorn: { $0 == 3 || $0 == 5 }))
+    check("Jours sans montre exclus de l'historique", r.history.count == 5 && r.daysWithoutWatch == 2, "\(r.history.count) / \(r.daysWithoutWatch)")
+    check("Objectif basé sur les seuls jours portés", near(r.todayTarget, 2750 / 0.9))
+    let none = EnergyCore.compute(inputs(intake: { _ in 3000 }, completed: { $0 <= 7 }))
+    check("Aucune donnée montre → pas d'objectif ni de verdict", none.todayTarget == nil && none.verdict == .notEnoughData(daysLogged: 0))
 }
 
 // 9. Garde-fou : pesées incohérentes (−10 kg en 4 semaines) → calibration rejetée
