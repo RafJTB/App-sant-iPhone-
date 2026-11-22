@@ -2,6 +2,8 @@
 
 App iOS native (SwiftUI) qui lit tes données de l'app **Santé** et te permet de **saisir ce que tu manges** pour savoir si, au rythme actuel, **tu vas prendre du poids**.
 
+> **Nouveau : [Coach Abdos](abdos/README.md)**, une web app installable (PWA, sans Mac ni App Store) qui guide au quotidien vers des abdos visibles : menus chiffrés, programme de musculation de 4 semaines, suivi poids / tour de taille et rappels. Dossier [`abdos/`](abdos/).
+
 ## Ce que fait l'app
 
 | Onglet | Contenu | Source |

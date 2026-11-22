@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Icône source de Coach Abdos : six blocs (les « tablettes ») sur fond graphite.
+       Les PNG du dossier sont générés à partir de ce fichier. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1C2028"/>
+      <stop offset="1" stop-color="#0E1014"/>
+    </linearGradient>
+    <linearGradient id="blk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FA6FF"/>
+      <stop offset="1" stop-color="#5D79E6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g fill="url(#blk)">
+    <rect x="146" y="118" width="102" height="80" rx="28"/>
+    <rect x="264" y="118" width="102" height="80" rx="28"/>
+    <rect x="146" y="214" width="102" height="80" rx="28"/>
+    <rect x="264" y="214" width="102" height="80" rx="28"/>
+    <rect x="152" y="310" width="96" height="84" rx="28"/>
+    <rect x="264" y="310" width="96" height="84" rx="28"/>
+  </g>
+</svg>
