@@ -663,7 +663,7 @@ const WEEKS = [
 
 /** Conseils du jour (un par jour, en rotation). */
 const TIPS = [
-  'On ne brûle pas le gras localement : les crunchs ne « sèchent » pas le ventre. Abdos visibles = muscle abdominal développé + taux de gras bas.',
+  'On ne brûle pas le gras localement : les crunchs ne « sèchent » pas le ventre. Abdos visibles = muscle abdominal développé + taux de gras bas.',
   'Les abdos se travaillent comme les autres muscles : de la charge, 8 à 15 reps, et une progression semaine après semaine.',
   'Vise environ 25 g de protéines par repas (≈ 0,4 g/kg), sur 4 à 5 repas : c’est la répartition la plus efficace pour construire du muscle.',
   'Pèse-toi le matin, à jeun, après les toilettes. Le poids d’un jour varie de ±1 kg (eau, sel, glucides) : seule la moyenne de la semaine compte.',
@@ -672,7 +672,7 @@ const TIPS = [
   'Prise de poids visée : +0,5 à 1 kg par mois. Plus vite, c’est surtout du gras qui s’installe.',
   'Un sommeil court réduit la récupération et augmente la faim. 7 à 9 h, c’est aussi un entraînement.',
   'Les pas sont la dépense la plus facile à contrôler et ne gênent pas la récupération : 8 000 à 10 000 par jour.',
-  'Un ventre « gonflé » un jour, c’est souvent de l’eau (sel, glucides, stress), pas du gras.',
+  'Un ventre « gonflé » un jour, c’est souvent de l’eau (sel, glucides, stress), pas du gras.',
   'Filme ta première série de squat de profil : tu verras tout de suite la profondeur et la position du dos.',
   'Un grand verre d’eau au réveil, c’est déjà 10 % de ton objectif sans y penser.',
   'La semaine de décharge fait partie de la progression : muscles et tendons se renforcent pendant la récupération.',
@@ -1619,7 +1619,7 @@ Views.prefs = () => {
         ${field('Taille', 'height', { suffix: 'cm', min: 120, max: 230, mode: 'numeric' })}
         ${field('Poids de référence', 'weight', { suffix: 'kg', min: 35, max: 200 })}
         <label class="field-row" for="f-activity"><span>Activité</span><span class="field-wrap"><select class="field" id="f-activity" style="width:176px;text-align:left" data-change="setting" data-key="activity" data-kind="num">
-          ${[[1.375, 'Peu actif'], [1.55, 'Actif (4 séances + pas)'], [1.725, 'Très actif']].map(([v, l]) => `<option value="${v}" ${+st.activity === v ? 'selected' : ''}>${l}</option>`).join('')}
+          ${[[1.375, 'Peu actif'], [1.55, 'Actif · 4 séances'], [1.725, 'Très actif']].map(([v, l]) => `<option value="${v}" ${+st.activity === v ? 'selected' : ''}>${l}</option>`).join('')}
         </select></span></label>
       </div>
     </section>
@@ -1636,7 +1636,7 @@ Views.prefs = () => {
     <section class="card tight">
       <h2 class="h3">Horaires des repas</h2>
       <div class="list">${Object.entries(MEAL_SLOTS).map(([id, s]) => field(s.name, 'mealTimes.' + id, { kind: 'time' })).join('')}</div>
-      <p class="note">La collation de 16:30 devient « pré-séance » les jours d’entraînement : place-la 1 h 30 avant ta séance. La collation du soir n’est prévue que les jours d’entraînement.</p>
+      <p class="note">La collation de 16:30 devient « pré-séance » les jours d’entraînement : place-la 1 h 30 avant ta séance. La collation du soir n’est prévue que les jours d’entraînement.</p>
     </section>
     <section class="card tight">
       <h2 class="h3">Rappels</h2>
